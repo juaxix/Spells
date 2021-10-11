@@ -9,6 +9,11 @@
 class UProjectileMovementComponent;
 class USphereComponent;
 
+namespace SpellsGame
+{
+	const FName MagicProjectileChannel = TEXT("MagicProjectile");
+}
+
 UCLASS()
 class SPELLS_API ASMagicProjectile : public AActor
 {
@@ -18,12 +23,12 @@ public:
 	ASMagicProjectile();
 
 protected:
-	UPROPERTY(VisibleAnywhere, Category = "Projectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
 	USphereComponent* SphereComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Projectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
 	UProjectileMovementComponent* ProjectileMovementComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "FX")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "FX")
 	UParticleSystemComponent* EffectComponent = nullptr;
 };

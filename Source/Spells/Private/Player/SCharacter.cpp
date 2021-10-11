@@ -1,8 +1,8 @@
 // Spells - xixgames - juaxix - 2021
 
-#include "SCharacter.h"
+#include "Player/SCharacter.h"
 
-#include "SMagicProjectile.h"
+#include "Attacks/SMagicProjectile.h"
 #include "Camera/CameraComponent.h" 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
@@ -65,6 +65,7 @@ void ASCharacter::PrimaryAttack()
 	const FTransform SpawnTransform = FTransform(GetControlRotation(), GetMesh()->GetSocketLocation(SRIGHT_HAND_SOCKET));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.Instigator = this;
 	GetWorld()->SpawnActor<ASMagicProjectile>(PrimaryAttackProjectileClass, SpawnTransform, SpawnParams);
 }
 

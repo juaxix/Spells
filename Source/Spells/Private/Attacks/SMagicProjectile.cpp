@@ -1,6 +1,6 @@
 // Spells - xixgames - juaxix - 2021
 
-#include "SMagicProjectile.h"
+#include "Attacks/SMagicProjectile.h"
 
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -8,12 +8,19 @@
 
 ASMagicProjectile::ASMagicProjectile()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	RootComponent = SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	EffectComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("EffectComponent"));
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 
 	EffectComponent->SetupAttachment(SphereComponent);
+
+	SphereComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereComponent->SetCollisionProfileName(SpellsGame::MagicProjectileChannel);
+	SphereComponent->CanCharacterStepUpOn = ECB_No;
+
 	ProjectileMovementComponent->InitialSpeed = 1000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;

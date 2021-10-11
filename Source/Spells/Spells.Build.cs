@@ -11,5 +11,8 @@ public class Spells : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
+
+		PublicIncludePaths.Add(ModuleDirectory + "/Public");
+		PrivateIncludePaths.Add(ModuleDirectory+"/Private");
 	}
 }
