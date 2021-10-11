@@ -15,6 +15,7 @@ namespace
 	const FName SLOOKUP_AXIS = TEXT("LookUp");
 	const FName STURN_AXIS = TEXT("Turn");
 	const FName SPRIMARY_ATTACK_KEY = TEXT("PrimaryAttack");
+	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SRIGHT_HAND_SOCKET = TEXT("Muzzle_01");
 	constexpr float DebugDrawScale = 100.0f;
 	constexpr float DebugDrawThickness = 5.0f;
@@ -48,6 +49,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(STURN_AXIS, this, &APawn::AddControllerYawInput);
 
 	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
 }
 
 void ASCharacter::Tick(float DeltaSeconds)
