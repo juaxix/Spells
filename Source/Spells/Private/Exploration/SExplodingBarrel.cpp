@@ -24,6 +24,12 @@ void ASExplodingBarrel::BeginPlay()
 	GetStaticMeshComponent()->OnComponentHit.AddDynamic(this, &ASExplodingBarrel::OnBarrelHit);
 }
 
+void ASExplodingBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetStaticMeshComponent()->OnComponentHit.RemoveAll(this);
+	Super::EndPlay(EndPlayReason);
+}
+
 void ASExplodingBarrel::OnBarrelHit_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(OtherActor))

@@ -2,11 +2,12 @@
 
 #include "Player/SCharacter.h"
 
+#include "DrawDebugHelpers.h"
 #include "Attacks/SMagicProjectile.h"
 #include "Camera/CameraComponent.h" 
 #include "GameFramework/CharacterMovementComponent.h"
-#include "DrawDebugHelpers.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Gameplay/SCharacterInteractionComponent.h"
 
 namespace
 {
@@ -15,6 +16,7 @@ namespace
 	const FName SLOOKUP_AXIS = TEXT("LookUp");
 	const FName STURN_AXIS = TEXT("Turn");
 	const FName SPRIMARY_ATTACK_KEY = TEXT("PrimaryAttack");
+	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SRIGHT_HAND_SOCKET = TEXT("Muzzle_01");
 	constexpr float DebugDrawScale = 100.0f;
@@ -33,6 +35,8 @@ ASCharacter::ASCharacter()
 	SpringArmComponent->SetupAttachment(RootComponent);
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
+	CharacterInteractionComponent = CreateDefaultSubobject<USCharacterInteractionComponent>(TEXT("InteractionComponent"));
+
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	SpringArmComponent->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
@@ -50,6 +54,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttack);
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
+	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
 
 void ASCharacter::Tick(float DeltaSeconds)
@@ -63,7 +68,6 @@ void ASCharacter::PrimaryAttack()
 {
 	ensureAlwaysMsgf(PrimaryAttackProjectileClass != nullptr, TEXT("PrimaryAttackProjectileClass needs a class"));
 
-	// GetActorLocation() + FVector(0.f,0.f,BaseEyeHeight) // EYES
 	const FTransform SpawnTransform = FTransform(GetControlRotation(), GetMesh()->GetSocketLocation(SRIGHT_HAND_SOCKET));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;

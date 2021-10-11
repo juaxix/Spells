@@ -7,9 +7,10 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
-class UCameraComponent;
-class USpringArmComponent;
 class ASMagicProjectile;
+class UCameraComponent;
+class USCharacterInteractionComponent;
+class USpringArmComponent;
 
 UCLASS()
 class SPELLS_API ASCharacter : public ACharacter
@@ -38,6 +39,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Player")
 	USpringArmComponent* SpringArmComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Interaction")
+	USCharacterInteractionComponent* CharacterInteractionComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Magic")
 	TSubclassOf<ASMagicProjectile> PrimaryAttackProjectileClass;
