@@ -22,7 +22,6 @@ class SPELLS_API ASMagicProjectile : public AActor
 public:	
 	ASMagicProjectile();
 
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
 	USphereComponent* SphereComponent = nullptr;
 

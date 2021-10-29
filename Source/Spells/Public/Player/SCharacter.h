@@ -8,6 +8,7 @@
 #include "SCharacter.generated.h"
 
 class ASMagicProjectile;
+class UAnimMontage;
 class UCameraComponent;
 class USCharacterInteractionComponent;
 class USpringArmComponent;
@@ -23,6 +24,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Character")
+	virtual void PrimaryAttackAnimNotif() { DoPrimaryAttack(); }
+
 protected:
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -30,7 +34,15 @@ protected:
 	virtual void MoveForward(float Value) { AddMovementInput(FRotator(0.0f, GetControlRotation().Yaw, 0.0f).Vector(), Value);}
 	virtual void MoveRight(float Value) { AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetScaledAxis(EAxis::Y), Value); }
 
-	virtual void PrimaryAttack();
+	virtual void PrimaryAttackInputAction()
+	{
+		//if (!GetMesh()->GetAnimInstance()->Montage_IsPlaying(PrimaryAttackAnimMontage))
+		{
+			PlayAnimMontage(PrimaryAttackAnimMontage);
+		}
+	}
+
+	virtual void DoPrimaryAttack();
 
 	virtual void DrawDebug();
 
@@ -39,10 +51,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Player")
 	USpringArmComponent* SpringArmComponent = nullptr;
-
+	
 	UPROPERTY(VisibleAnywhere, Category = "Interaction")
 	USCharacterInteractionComponent* CharacterInteractionComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Magic")
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	UAnimMontage* PrimaryAttackAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	TSubclassOf<ASMagicProjectile> PrimaryAttackProjectileClass;
 };

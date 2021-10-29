@@ -5,6 +5,7 @@
 #include "DrawDebugHelpers.h"
 #include "Attacks/SMagicProjectile.h"
 #include "Camera/CameraComponent.h" 
+#include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
@@ -52,7 +53,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(SLOOKUP_AXIS, this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis(STURN_AXIS, this, &APawn::AddControllerYawInput);
 
-	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttackInputAction);
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
@@ -64,15 +65,17 @@ void ASCharacter::Tick(float DeltaSeconds)
 	DrawDebug();
 }
 
-void ASCharacter::PrimaryAttack()
+void ASCharacter::DoPrimaryAttack()
 {
 	ensureAlwaysMsgf(PrimaryAttackProjectileClass != nullptr, TEXT("PrimaryAttackProjectileClass needs a class"));
-
+	
 	const FTransform SpawnTransform = FTransform(GetControlRotation(), GetMesh()->GetSocketLocation(SRIGHT_HAND_SOCKET));
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	SpawnParams.Instigator = this;
-	GetWorld()->SpawnActor<ASMagicProjectile>(PrimaryAttackProjectileClass, SpawnTransform, SpawnParams);
+
+	ASMagicProjectile* Projectile = GetWorld()->SpawnActor<ASMagicProjectile>(PrimaryAttackProjectileClass, SpawnTransform, SpawnParams);
+	Projectile->SphereComponent->IgnoreActorWhenMoving(this, true);
 }
 
 void ASCharacter::DrawDebug()

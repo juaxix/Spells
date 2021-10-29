@@ -9,6 +9,7 @@
 
 USCharacterInteractionComponent::USCharacterInteractionComponent()
 	: bDebugInteraction(false)
+	, bCheckForWalls(false)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
@@ -19,23 +20,36 @@ void USCharacterInteractionComponent::PrimaryAction()
 	{
 		FHitResult HitResult;
 		FVector StartLocation = MyOwner->GetActorLocation() + InteractionOffset;
-		FVector EndLocation = StartLocation + (MyOwner->GetControlRotation().Vector() * MaxInteractionDistance);
+		FVector EndLocation = StartLocation + MyOwner->GetControlRotation().Vector() * MaxInteractionDistance;
 		FCollisionObjectQueryParams CollisionObjectQueryParams;
 		CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 		FCollisionQueryParams CollisionQueryParams;
 		CollisionQueryParams.AddIgnoredActor(MyOwner);
 		FCollisionShape CollisionShape;
 		CollisionShape.SetSphere(InteractionRadius);
+		UWorld* World = GetWorld();
 
-		if (GetWorld()->SweepSingleByObjectType(HitResult, StartLocation, EndLocation, FQuat::Identity, CollisionObjectQueryParams, CollisionShape, CollisionQueryParams))
+		if (World->SweepSingleByObjectType(HitResult, StartLocation, EndLocation, FQuat::Identity, CollisionObjectQueryParams, CollisionShape, CollisionQueryParams))
 		{
-			EndLocation = HitResult.ImpactPoint;
 			if (AActor* HitActor = HitResult.GetActor())
 			{
-				if (HitActor->Implements<USInteractableInterface>())
+				FHitResult WallHitResult;
+				CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+				if (HitActor->Implements<USInteractableInterface>() &&  (!bCheckForWalls || 
+					 World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitResult.ImpactPoint, CollisionObjectQueryParams) &&
+					 WallHitResult.GetActor() == HitActor))
 				{
 					ISInteractableInterface::Execute_Interact(HitActor, MyOwner);
+					EndLocation = bCheckForWalls && WallHitResult.bBlockingHit ? WallHitResult.ImpactPoint : HitResult.ImpactPoint;
 				}
+				else
+				{
+					EndLocation = HitResult.ImpactPoint;
+				}
+			}
+			else
+			{
+				EndLocation = HitResult.ImpactPoint;
 			}
 		}
 
