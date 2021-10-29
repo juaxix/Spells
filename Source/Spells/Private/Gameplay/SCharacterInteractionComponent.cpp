@@ -36,8 +36,8 @@ void USCharacterInteractionComponent::PrimaryAction()
 				FHitResult WallHitResult;
 				CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 				if (HitActor->Implements<USInteractableInterface>() &&  (!bCheckForWalls || 
-					 World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitResult.ImpactPoint, CollisionObjectQueryParams) &&
-					 WallHitResult.GetActor() == HitActor))
+					 World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitActor->GetActorLocation(), CollisionObjectQueryParams) &&
+					 (WallHitResult.GetActor() == HitActor || WallHitResult.GetActor() == nullptr )))
 				{
 					ISInteractableInterface::Execute_Interact(HitActor, MyOwner);
 					EndLocation = bCheckForWalls && WallHitResult.bBlockingHit ? WallHitResult.ImpactPoint : HitResult.ImpactPoint;
@@ -60,7 +60,5 @@ void USCharacterInteractionComponent::PrimaryAction()
 				HitResult.bBlockingHit ? FColor::Green : FColor::Silver, 
 					false, 0.5f, 0, 2);
 		}
-
-
 	}
 }

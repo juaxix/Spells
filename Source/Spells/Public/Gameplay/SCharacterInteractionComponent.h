@@ -17,7 +17,6 @@ public:
 
 	virtual void PrimaryAction();
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 	float MaxInteractionDistance = 1000.0f;
 
@@ -26,7 +25,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 	float InteractionRadius = 30.0f;
-
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))

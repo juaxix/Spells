@@ -22,6 +22,9 @@ class SPELLS_API ASMagicProjectile : public AActor
 public:	
 	ASMagicProjectile();
 
+protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
 	USphereComponent* SphereComponent = nullptr;
 

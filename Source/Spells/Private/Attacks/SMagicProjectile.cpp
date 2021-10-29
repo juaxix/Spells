@@ -25,3 +25,9 @@ ASMagicProjectile::ASMagicProjectile()
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;
 }
+
+void ASMagicProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
+}

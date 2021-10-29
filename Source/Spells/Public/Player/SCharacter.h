@@ -13,6 +13,13 @@ class UCameraComponent;
 class USCharacterInteractionComponent;
 class USpringArmComponent;
 
+UENUM(BlueprintType)
+enum class ESAimModes: uint8
+{
+	HitScan = 0 UMETA(Tooltip = "Trace to hit for aiming"),
+	Viewport = 1 UMETA(Tooltip = "Use viewport rotation")
+};
+
 UCLASS()
 class SPELLS_API ASCharacter : public ACharacter
 {
@@ -25,7 +32,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Character")
-	virtual void PrimaryAttackAnimNotif() { DoPrimaryAttack(); }
+	virtual void PrimaryAttackAnimNotif() { DoMagicalAttack(PrimaryAttackProjectileClass); }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Character")
+	virtual void SecundaryAttackAnimNotif() { DoMagicalAttack(SecundaryAttackProjectileClass); }
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
@@ -36,13 +46,15 @@ protected:
 
 	virtual void PrimaryAttackInputAction()
 	{
-		//if (!GetMesh()->GetAnimInstance()->Montage_IsPlaying(PrimaryAttackAnimMontage))
-		{
-			PlayAnimMontage(PrimaryAttackAnimMontage);
-		}
+		PlayAnimMontage(PrimaryAttackAnimMontage);
 	}
 
-	virtual void DoPrimaryAttack();
+	virtual void SecundaryAttackInputAction()
+	{
+		PlayAnimMontage(SecundaryAttackAnimMontage);
+	}
+
+	virtual void DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass);
 
 	virtual void DrawDebug();
 
@@ -59,5 +71,17 @@ protected:
 	UAnimMontage* PrimaryAttackAnimMontage = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
+	UAnimMontage* SecundaryAttackAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	TSubclassOf<ASMagicProjectile> PrimaryAttackProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<ASMagicProjectile> SecundaryAttackProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Setup")
+	uint8 bDebugMode:1;
+
+	UPROPERTY(EditAnywhere, Category = "Setup")
+	ESAimModes AimMode = ESAimModes::Viewport;
 };

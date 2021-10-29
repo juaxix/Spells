@@ -32,7 +32,7 @@ void ASExplodingBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASExplodingBarrel::OnBarrelHit_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(OtherActor))
+	if (const ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(OtherActor))
 	{
 		RadialForceComponent->FireImpulse();
 
