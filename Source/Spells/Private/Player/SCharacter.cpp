@@ -17,10 +17,11 @@ namespace
 	const FName STURN_AXIS = TEXT("Turn");
 	const FName SPRIMARY_ATTACK_KEY = TEXT("PrimaryAttack");
 	const FName SSECUNDARY_ATTACK_KEY = TEXT("SecundaryAttack");
+	const FName SSPECIAL_ATTACK_KEY = TEXT("SpecialAttack");
 	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
-	const FName SSECUNDARY_ACTION_KEY = TEXT("SecundaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SRIGHT_HAND_SOCKET = TEXT("Muzzle_01");
+
 	constexpr float MaxHitScanDistanceLook = 10000.0f;
 	constexpr float DebugDrawScale = 100.0f;
 	constexpr float DebugDrawThickness = 5.0f;
@@ -58,6 +59,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttackInputAction);
 	PlayerInputComponent->BindAction(SSECUNDARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SecundaryAttackInputAction);
+	PlayerInputComponent->BindAction(SSPECIAL_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SpecialAttackInputAction);
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
@@ -88,13 +90,12 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 				CollisionQueryParams.AddIgnoredActor(this);
 				FVector LookStart = PlayerController->PlayerCameraManager->GetCameraLocation();
 				FVector LookEnd = LookStart + PlayerController->PlayerCameraManager->GetActorForwardVector() * MaxHitScanDistanceLook;
-				DrawDebugLine(World, LookStart, LookEnd, FColor::Red, false, 2.0f);
+				//DrawDebugLine(World, LookStart, LookEnd, FColor::Red, false, 2.0f);
 				if (World->LineTraceSingleByChannel(Hit, LookStart, LookEnd,ECC_Visibility, CollisionQueryParams))
 				{
 					LookEnd = Hit.ImpactPoint;
+					ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
 				}
-				
-				ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
 				
 				break;
 			}
@@ -115,11 +116,11 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 
 void ASCharacter::DrawDebug()
 {
-	FVector DrawLineStart = GetActorLocation() + GetActorRightVector() * DebugDrawDistance;
-	FVector DrawDirection_LineEnd = DrawLineStart + (GetActorForwardVector() * DebugDrawDistance);
+	const FVector DrawLineStart = GetActorLocation() + GetActorRightVector() * DebugDrawDistance;
+	const FVector DrawDirection_LineEnd = DrawLineStart + (GetActorForwardVector() * DebugDrawDistance);
 	DrawDebugDirectionalArrow(GetWorld(), DrawLineStart, DrawDirection_LineEnd, DebugDrawScale, FColor::Yellow, false, 0.0f, 0, DebugDrawThickness);
 
-	FVector ControllerDirection_LineEnd = DrawLineStart + (GetControlRotation().Vector() * 100.0f);
+	const FVector ControllerDirection_LineEnd = DrawLineStart + (GetControlRotation().Vector() * 100.0f);
 	DrawDebugDirectionalArrow(GetWorld(), DrawLineStart, ControllerDirection_LineEnd, DebugDrawScale, FColor::Green, false, 0.0f, 0, DebugDrawThickness);
 }
 

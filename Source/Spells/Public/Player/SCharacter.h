@@ -31,11 +31,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Character")
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
 	virtual void PrimaryAttackAnimNotif() { DoMagicalAttack(PrimaryAttackProjectileClass); }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Character")
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
 	virtual void SecundaryAttackAnimNotif() { DoMagicalAttack(SecundaryAttackProjectileClass); }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
+	virtual void SpecialAttackAnimNotif() { DoMagicalAttack(SpecialAttackProjectileClass); }
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
@@ -52,6 +55,11 @@ protected:
 	virtual void SecundaryAttackInputAction()
 	{
 		PlayAnimMontage(SecundaryAttackAnimMontage);
+	}
+
+	virtual void SpecialAttackInputAction()
+	{
+		PlayAnimMontage(SpecialAttackAnimMontage);
 	}
 
 	virtual void DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass);
@@ -74,10 +82,16 @@ protected:
 	UAnimMontage* SecundaryAttackAnimMontage = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
+	UAnimMontage* SpecialAttackAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	TSubclassOf<ASMagicProjectile> PrimaryAttackProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TSubclassOf<ASMagicProjectile> SecundaryAttackProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TSubclassOf<ASMagicProjectile> SpecialAttackProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	uint8 bDebugMode:1;

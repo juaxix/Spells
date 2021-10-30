@@ -19,7 +19,7 @@ void USCharacterInteractionComponent::PrimaryAction()
 	if (ACharacter* MyOwner = Cast<ACharacter>(GetOwner()))
 	{
 		FHitResult HitResult;
-		FVector StartLocation = MyOwner->GetActorLocation() + InteractionOffset;
+		FVector StartLocation = MyOwner->GetActorLocation() + InteractionOffset + FVector::UpVector * MyOwner->BaseEyeHeight;
 		FVector EndLocation = StartLocation + MyOwner->GetControlRotation().Vector() * MaxInteractionDistance;
 		FCollisionObjectQueryParams CollisionObjectQueryParams;
 		CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
