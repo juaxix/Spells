@@ -22,6 +22,15 @@ class SPELLS_API ASMagicProjectile : public AActor
 public:	
 	ASMagicProjectile();
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Projectile")
+	void OnSphereActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Projectile")
+	void OnSphereActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spells|Projectile")
+	void OnProjectileStopped(const FHitResult& ImpactResult);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -33,4 +42,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "FX")
 	UParticleSystemComponent* EffectComponent = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	float Damage = 20.0f;
 };

@@ -5,9 +5,11 @@
 #include "DrawDebugHelpers.h"
 #include "Attacks/SMagicProjectile.h"
 #include "Camera/CameraComponent.h" 
+#include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
+#include "Player/SAttributesComponent.h"
 
 namespace
 {
@@ -36,6 +38,7 @@ ASCharacter::ASCharacter()
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>("AttributesComponent");
 
 	SpringArmComponent->SetupAttachment(RootComponent);
 	CameraComponent->SetupAttachment(SpringArmComponent);
@@ -64,6 +67,13 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
 
+void ASCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	// Cache sockets
+	RightHandSocket = GetMesh()->GetSocketByName(SRIGHT_HAND_SOCKET);
+}
+
 void ASCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -76,7 +86,8 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 	ensureAlwaysMsgf(MagicProjectileClass != nullptr, TEXT("PrimaryAttackProjectileClass needs a class"));
 	FRotator ProjectileRotation;
 	UWorld* World = GetWorld();
-	FVector HandLocation = GetMesh()->GetSocketLocation(SRIGHT_HAND_SOCKET);
+	FVector HandLocation = RightHandSocket->GetSocketLocation(GetMesh());
+	
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetOwner()))
 	{
 		ProjectileRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
@@ -90,7 +101,7 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 				CollisionQueryParams.AddIgnoredActor(this);
 				FVector LookStart = PlayerController->PlayerCameraManager->GetCameraLocation();
 				FVector LookEnd = LookStart + PlayerController->PlayerCameraManager->GetActorForwardVector() * MaxHitScanDistanceLook;
-				//DrawDebugLine(World, LookStart, LookEnd, FColor::Red, false, 2.0f);
+				
 				if (World->LineTraceSingleByChannel(Hit, LookStart, LookEnd,ECC_Visibility, CollisionQueryParams))
 				{
 					LookEnd = Hit.ImpactPoint;

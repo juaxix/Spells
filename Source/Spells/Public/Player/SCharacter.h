@@ -9,8 +9,10 @@
 
 class ASMagicProjectile;
 class UAnimMontage;
+class USAttributesComponent;
 class UCameraComponent;
 class USCharacterInteractionComponent;
+class USkeletalMeshSocket;
 class USpringArmComponent;
 
 UENUM(BlueprintType)
@@ -41,6 +43,8 @@ public:
 	virtual void SpecialAttackAnimNotif() { DoMagicalAttack(SpecialAttackProjectileClass); }
 
 protected:
+	virtual void BeginPlay() override;
+
 	virtual void Tick(float DeltaSeconds) override;
 
 	// Move in the direction of the controller
@@ -69,11 +73,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Player")
 	UCameraComponent* CameraComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Player")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	USpringArmComponent* SpringArmComponent = nullptr;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Interaction")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	USCharacterInteractionComponent* CharacterInteractionComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Attributes")
+	USAttributesComponent* AttributesComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* PrimaryAttackAnimMontage = nullptr;
@@ -98,4 +105,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	ESAimModes AimMode = ESAimModes::Viewport;
+
+
+private:
+	USkeletalMeshSocket const* RightHandSocket = nullptr;
 };

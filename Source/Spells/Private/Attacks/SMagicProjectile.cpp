@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Player/SAttributesComponent.h"
 
 ASMagicProjectile::ASMagicProjectile()
 {
@@ -20,14 +21,34 @@ ASMagicProjectile::ASMagicProjectile()
 	SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SphereComponent->SetCollisionProfileName(SpellsGame::MagicProjectileChannel);
 	SphereComponent->CanCharacterStepUpOn = ECB_No;
-
+	
 	ProjectileMovementComponent->InitialSpeed = 1000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;
+}
+
+void ASMagicProjectile::OnSphereActorHit_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	OnSphereActorOverlap(HitComponent, OtherActor, OtherComp, 0, false, Hit);
+}
+
+void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (IsValid(OtherActor) && OtherActor != GetInstigator())
+	{
+		if (USAttributesComponent* Attributes = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass())))
+		{
+			Attributes->ApplyHealthChange(-Damage, GetInstigator(), SweepResult);
+			OnProjectileStopped(SweepResult);
+		}
+	}
 }
 
 void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnSphereActorOverlap);
+	SphereComponent->OnComponentHit.AddDynamic(this, &ASMagicProjectile::OnSphereActorHit);
+	ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &ASMagicProjectile::OnProjectileStopped);
 }
