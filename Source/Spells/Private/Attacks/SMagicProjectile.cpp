@@ -44,9 +44,9 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 	}
 }
 
-void ASMagicProjectile::BeginPlay()
+void ASMagicProjectile::PostInitializeComponents()
 {
-	Super::BeginPlay();
+	Super::PostInitializeComponents();
 	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnSphereActorOverlap);
 	SphereComponent->OnComponentHit.AddDynamic(this, &ASMagicProjectile::OnSphereActorHit);

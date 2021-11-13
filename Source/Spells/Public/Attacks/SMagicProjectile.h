@@ -32,7 +32,7 @@ public:
 	void OnProjectileStopped(const FHitResult& ImpactResult);
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
 	USphereComponent* SphereComponent = nullptr;

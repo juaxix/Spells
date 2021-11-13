@@ -102,9 +102,14 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 				FVector LookStart = PlayerController->PlayerCameraManager->GetCameraLocation();
 				FVector LookEnd = LookStart + PlayerController->PlayerCameraManager->GetActorForwardVector() * MaxHitScanDistanceLook;
 				
-				if (World->LineTraceSingleByChannel(Hit, LookStart, LookEnd,ECC_Visibility, CollisionQueryParams))
+				if (World->LineTraceSingleByObjectType(Hit, LookStart, LookEnd, FCollisionObjectQueryParams::AllObjects, CollisionQueryParams))
 				{
 					LookEnd = Hit.ImpactPoint;
+					if (bDebugMode)
+					{
+						DrawDebugSphere(World, LookEnd, 23.f, 12, FColor::Red, false, 1.5f);
+					}
+
 					ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
 				}
 				
