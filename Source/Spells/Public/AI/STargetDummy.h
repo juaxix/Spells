@@ -18,8 +18,10 @@ public:
 	ASTargetDummy();
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
+
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit);
 

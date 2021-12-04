@@ -19,16 +19,20 @@ ASTargetDummy::ASTargetDummy()
 	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>(TEXT("AttributesComponent"));
 }
 
-void ASTargetDummy::BeginPlay()
+void ASTargetDummy::PostInitializeComponents()
 {
-	Super::BeginPlay();
-	AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASTargetDummy::OnHealthChanged);
+	Super::PostInitializeComponents();
+	if (!HasAnyFlags(RF_DefaultSubObject|RF_ClassDefaultObject|RF_Transient) && 
+		!AttributesComponent->OnHealthAttributeChanged.IsAlreadyBound(this, &ASTargetDummy::OnHealthChanged))
+	{
+		AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASTargetDummy::OnHealthChanged);
+	}
 }
 
 void ASTargetDummy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	AttributesComponent->OnHealthAttributeChanged.RemoveAll(this);
 	Super::EndPlay(EndPlayReason);
+	AttributesComponent->OnHealthAttributeChanged.RemoveAll(this);
 }
 
 void ASTargetDummy::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit)

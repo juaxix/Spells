@@ -67,6 +67,14 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
 
+void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit)
+{
+	if (NewHealth <= 0.0f && Delta < 0.0f)
+	{
+		DisableInput(Cast<APlayerController>(GetController()));
+	}
+}
+
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -79,6 +87,16 @@ void ASCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	DrawDebug();
+}
+
+void ASCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (!HasAnyFlags(RF_DefaultSubObject|RF_ClassDefaultObject|RF_Transient) &&
+		!AttributesComponent->OnHealthAttributeChanged.IsAlreadyBound(this, &ASCharacter::OnHealthChanged))
+	{
+		AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+	}
 }
 
 void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass)

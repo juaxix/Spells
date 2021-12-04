@@ -17,7 +17,13 @@ class SPELLS_API USAttributesComponent : public UActorComponent
 public:	
 	USAttributesComponent();
 
-	UFUNCTION(BlueprintCallable, Category = "Spells|Attributes") FORCEINLINE
+	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
+	bool IsAlive() const
+	{
+		return Health > 0.0f;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Health")
 	bool ApplyHealthChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Health")

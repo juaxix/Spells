@@ -42,10 +42,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
 	virtual void SpecialAttackAnimNotif() { DoMagicalAttack(SpecialAttackProjectileClass); }
 
-protected:
+	UFUNCTION()
+	void OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit);
+
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	virtual void PostInitializeComponents() override;
 
 	// Move in the direction of the controller
 	virtual void MoveForward(float Value) { AddMovementInput(FRotator(0.0f, GetControlRotation().Yaw, 0.0f).Vector(), Value);}
@@ -108,5 +112,6 @@ protected:
 
 
 private:
+	UPROPERTY(Transient)
 	USkeletalMeshSocket const* RightHandSocket = nullptr;
 };

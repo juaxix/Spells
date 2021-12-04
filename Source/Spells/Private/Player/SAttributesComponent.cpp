@@ -9,7 +9,8 @@ USAttributesComponent::USAttributesComponent()
 
 bool USAttributesComponent::ApplyHealthChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
 {
-	Health += Delta;
+	Health = FMath::Clamp(Health + Delta, 0.0f, MaxHealth);
+
 	if (OnHealthAttributeChanged.IsBound())
 	{
 		OnHealthAttributeChanged.Broadcast(InstigatorActor, this, Health, Delta, Hit);

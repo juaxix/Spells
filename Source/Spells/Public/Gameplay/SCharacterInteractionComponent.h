@@ -32,4 +32,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup", meta = (AllowPrivateAccess = "true"))
 	uint8 bCheckForWalls:1;
+
+	FCollisionObjectQueryParams CollisionObjectQueryParams_StaticDynamic, CollisionObjectQueryParams_Static;
 };

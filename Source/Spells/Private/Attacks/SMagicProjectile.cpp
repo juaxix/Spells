@@ -47,8 +47,11 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 void ASMagicProjectile::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
-	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnSphereActorOverlap);
-	SphereComponent->OnComponentHit.AddDynamic(this, &ASMagicProjectile::OnSphereActorHit);
-	ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &ASMagicProjectile::OnProjectileStopped);
+	if (!HasAnyFlags(RF_ClassDefaultObject|RF_DefaultSubObject|RF_Transient))
+	{
+		SphereComponent->IgnoreActorWhenMoving(GetInstigator(), true);
+		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnSphereActorOverlap);
+		SphereComponent->OnComponentHit.AddDynamic(this, &ASMagicProjectile::OnSphereActorHit);
+		ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &ASMagicProjectile::OnProjectileStopped);
+	}
 }
