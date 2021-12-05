@@ -6,6 +6,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Player/SAttributesComponent.h"
+#include "Player/SCharacter.h"
 
 ASMagicProjectile::ASMagicProjectile()
 {

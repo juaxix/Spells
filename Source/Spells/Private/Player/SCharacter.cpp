@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/SAttributesComponent.h"
 
 namespace
@@ -69,9 +70,16 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit)
 {
-	if (NewHealth <= 0.0f && Delta < 0.0f)
+	if (Delta < 0.0f)
 	{
-		DisableInput(Cast<APlayerController>(GetController()));
+		if (NewHealth <= 0.0f)
+		{
+			DisableInput(Cast<APlayerController>(GetController()));
+		}
+		else
+		{
+			UGameplayStatics::PlayWorldCameraShake(this, CameraShake, GetPawnViewLocation(), 10.0f, 0.0f);
+		}
 	}
 }
 
@@ -109,7 +117,7 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetOwner()))
 	{
 		ProjectileRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-		switch(AimMode)
+		switch (AimMode)
 		{
 			default: case ESAimModes::Viewport: break;
 			case ESAimModes::HitScan:

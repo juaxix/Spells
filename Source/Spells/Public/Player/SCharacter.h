@@ -45,6 +45,9 @@ public:
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit);
 
+	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
+	USAttributesComponent* GetAttributesComponent() const {return AttributesComponent;}
+
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
@@ -110,7 +113,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	ESAimModes AimMode = ESAimModes::Viewport;
 
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
+	UParticleSystem* MuzzleParticleSystem = nullptr;
 
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
+	TSubclassOf<class UCameraShakeBase> CameraShake;
 private:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* RightHandSocket = nullptr;
