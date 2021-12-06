@@ -1,4 +1,4 @@
-// Spells - xixgames - juaxix - 2021
+// Spells - xixgames - juaxix - 2021/2022
 
 #include "Gameplay/SCharacterInteractionComponent.h"
 

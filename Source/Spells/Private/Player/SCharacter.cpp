@@ -1,4 +1,4 @@
-// Spells - xixgames - juaxix - 2021
+// Spells - xixgames - juaxix - 2021/2022
 
 #include "Player/SCharacter.h"
 
@@ -76,9 +76,14 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 		{
 			DisableInput(Cast<APlayerController>(GetController()));
 		}
-		else
+
+		if (CameraShake)
 		{
-			UGameplayStatics::PlayWorldCameraShake(this, CameraShake, GetPawnViewLocation(), 10.0f, 0.0f);
+			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			{
+				PC->ClientStartCameraShake(CameraShake, 10);
+				//PC->PlayerCameraManager->PlayWorldCameraShake(GetWorld(), CameraShake, GetActorLocation(), 10.0f, 0.0f, 0.1f);
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Spells - xixgames - juaxix - 2021
+// Spells - xixgames - juaxix - 2021/2022
 
 using UnrealBuildTool;
 using System.Collections.Generic;
