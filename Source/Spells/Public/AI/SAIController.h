@@ -6,6 +6,14 @@
 #include "AIController.h"
 #include "SAIController.generated.h"
 
+namespace SpellsAIController
+{
+	const FName STARGET_ACTOR_BB_KEY = TEXT("TargetActor");
+	const FName STARGET_LOCATION_BB_KEY = TEXT("TargetLocation");
+	const FName SWITHIN_ATTACK_RANGE_BB_KEY = TEXT("bWithinAttackRange");
+	const FName SWITHIN_ATTACK_SIGHT_BB_KEY = TEXT("bActorInLineOfSight");
+}
+
 /**
  * Class to control our minions
  */
