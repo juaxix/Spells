@@ -4,6 +4,7 @@
 
 #include "AI/SAICharacter.h"
 #include "AI/SAIController.h"
+#include "Attacks/SMagicProjectile.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -22,6 +23,11 @@ EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent
 				SpawnParameters.Instigator = AICharacter;
 				if (AActor* NewProjectile = GetWorld()->SpawnActor<AActor>(ProjectileClass, MuzzleLocation, MuzzleRotation, SpawnParameters))
 				{
+					if (ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(NewProjectile))
+					{
+						MagicProjectile->SetProjectileDamage(AICharacter->ProjectileDamage);
+					}
+
 					return EBTNodeResult::Succeeded;
 				}
 			}

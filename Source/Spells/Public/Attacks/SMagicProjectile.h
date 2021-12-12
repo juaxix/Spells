@@ -31,6 +31,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spells|Projectile")
 	void OnProjectileStopped(const FHitResult& ImpactResult);
 
+	UFUNCTION(BlueprintCallable, Category = "Spells|Projectile")
+	void SetProjectileDamage(float NewDamage) { Damage = NewDamage; }
+
 protected:
 	virtual void PostInitializeComponents() override;
 

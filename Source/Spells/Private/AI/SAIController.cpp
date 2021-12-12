@@ -11,26 +11,38 @@ void ASAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (DefaultBehaviorTree)
+	// cache blackboard key+vars
+	if (ensureMsgf(DefaultBehaviorTree, TEXT("Behavior Tree is not set; Please assign it for this AI Controller %s"), *GetName()))
 	{
 		RunBehaviorTree(DefaultBehaviorTree);
-		UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
-
-		if (APawn* FirstPlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
-		{
-			MoveToActorBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_ACTOR_BB_KEY);
-			if (MoveToActorBBKeyID != FBlackboard::InvalidKey)
-			{
-				BlackboardComponent->SetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID, FirstPlayerPawn);
-			}
-
-			MoveToLocationBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_LOCATION_BB_KEY);
-			if (MoveToLocationBBKeyID != FBlackboard::InvalidKey)
-			{
-				BlackboardComponent->SetValue<UBlackboardKeyType_Vector>(MoveToLocationBBKeyID, FirstPlayerPawn->GetActorLocation());
-			}
-		}
-
-		
+		const UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+		MoveToActorBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_ACTOR_BB_KEY);
+		MoveToLocationBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_LOCATION_BB_KEY);
 	}
+}
+
+bool ASAIController::SetCurrentTargetActor(AActor* InActor)
+{
+	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+	{
+		if (MoveToActorBBKeyID != FBlackboard::InvalidKey)
+		{
+			return BlackboardComponent->SetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID, InActor);
+		}
+	}
+
+	return false;
+}
+
+bool ASAIController::SetCurrentTargetLocation(const FVector& InLocation)
+{
+	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+	{
+		if (MoveToLocationBBKeyID != FBlackboard::InvalidKey)
+		{
+			return BlackboardComponent->SetValue<UBlackboardKeyType_Vector>(MoveToLocationBBKeyID, InLocation);
+		}
+	}
+
+	return false;
 }

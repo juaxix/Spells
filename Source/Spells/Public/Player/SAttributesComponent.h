@@ -23,6 +23,9 @@ public:
 		return Health > 0.0f;
 	}
 
+	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
+	bool IsFullHealth() const { return Health == MaxHealth; }
+
 	UFUNCTION(BlueprintCallable, Category = "Spells|Health")
 	bool ApplyHealthChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
 

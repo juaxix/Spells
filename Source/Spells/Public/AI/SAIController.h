@@ -25,6 +25,12 @@ class SPELLS_API ASAIController : public AAIController
 public:
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
+	bool SetCurrentTargetActor(AActor* InActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
+	bool SetCurrentTargetLocation(const FVector& InLocation);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
 	UBehaviorTree* DefaultBehaviorTree = nullptr;
