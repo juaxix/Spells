@@ -9,6 +9,7 @@
 
 /// Spells game includes
 #include "AI/SAIController.h"
+#include "Player/SAttributesComponent.h"
 
 namespace
 {
@@ -19,6 +20,7 @@ ASAICharacter::ASAICharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
+	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>(TEXT("AttributesComponent"));
 }
 
 void ASAICharacter::BeginPlay()

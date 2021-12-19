@@ -18,9 +18,9 @@ void USBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, u
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	if (ensure(BlackboardComponent))
 	{
-		if (AActor* MoveToActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(SpellsAIController::STARGET_ACTOR_BB_KEY)))
+		if (const AActor* MoveToActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(SpellsAIController::STARGET_ACTOR_BB_KEY)))
 		{
-			if (ASAIController* AIController = Cast<ASAIController>(OwnerComp.GetAIOwner()))
+			if (const ASAIController* AIController = Cast<ASAIController>(OwnerComp.GetAIOwner()))
 			{
 				APawn* AIPawn = AIController->GetPawn();
 				check(AIPawn);

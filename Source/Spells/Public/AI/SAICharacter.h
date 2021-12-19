@@ -10,7 +10,9 @@
 /**
  * Pawn sensing is the basic (original) version of the AI perception
  */
-class UPawnSensingComponent; 
+class UPawnSensingComponent;
+
+class USAttributesComponent;
 
 UCLASS()
 class SPELLS_API ASAICharacter : public ACharacter
@@ -32,6 +34,9 @@ public:
 	{
 		return MuzzleSocket->GetSocketLocation(GetMesh());
 	}
+
+	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
+	USAttributesComponent* GetAttributesComponent() const {return AttributesComponent;}
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
 	float ProjectileDamage = 10.0f;
@@ -40,6 +45,9 @@ protected:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* MuzzleSocket = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UPawnSensingComponent* PawnSensingComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USAttributesComponent* AttributesComponent = nullptr;
 };
