@@ -35,11 +35,12 @@ void ASMagicProjectile::OnSphereActorHit_Implementation(UPrimitiveComponent* Hit
 
 void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(OtherActor) && OtherActor != GetInstigator())
+	APawn* ThisInstigator = GetInstigator();
+	if (IsValid(OtherActor) && IsValid(ThisInstigator) && OtherActor != ThisInstigator )
 	{
 		if (USAttributesComponent* Attributes = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass())))
 		{
-			Attributes->ApplyHealthChange(-Damage, GetInstigator(), SweepResult);
+			Attributes->ApplyHealthChange(-Damage, ThisInstigator, SweepResult);
 			OnProjectileStopped(SweepResult);
 		}
 	}

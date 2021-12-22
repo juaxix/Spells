@@ -4,6 +4,7 @@
 
 /// Unreal includes
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BrainComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Perception/PawnSensingComponent.h"
 
@@ -17,10 +18,12 @@ namespace
 }
 
 ASAICharacter::ASAICharacter()
+	: bDebug(false)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>(TEXT("AttributesComponent"));
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void ASAICharacter::BeginPlay()
@@ -32,13 +35,44 @@ void ASAICharacter::BeginPlay()
 
 	// bind events
 	PawnSensingComponent->OnSeePawn.AddDynamic(this, &ASAICharacter::OnPawnInSight);
+	AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASAICharacter::OnHealthChanged);
 }
 
 void ASAICharacter::OnPawnInSight(APawn* InPawn)
 {
-	if (ASAIController* AIController = Cast<ASAIController>(GetController()))
+	if (ASAIController* AIController = GetController<ASAIController>())
 	{
 		AIController->SetCurrentTargetActor(InPawn);
-		DrawDebugString(GetWorld(), GetActorLocation(), FString::Printf(TEXT("PLAYER SPOTTED: %s"), *InPawn->GetName()), nullptr, FColor::Cyan, 4.0f, true);
+		if (bDebug)
+		{
+			DrawDebugString(GetWorld(), GetActorLocation(), FString::Printf(TEXT("PLAYER SPOTTED: %s"), *InPawn->GetName()), nullptr, FColor::Cyan, 4.0f, true);
+		}
+	}
+}
+
+void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, class USAttributesComponent* AttributeComponent, float NewHealth, float Delta, const FHitResult& Hit)
+{
+	if (Delta < 0.0f)
+	{
+		if (NewHealth <= 0.0f) //died
+		{
+			if (const ASAIController* AIController = GetController<ASAIController>())
+			{
+				AIController->GetBrainComponent()->StopLogic("Killed");
+			}
+
+			USkeletalMeshComponent* SkeletalMeshComponent = GetMesh();
+			SkeletalMeshComponent->SetCollisionProfileName("Ragdoll");
+			SkeletalMeshComponent->SetAllBodiesSimulatePhysics(true);
+			
+			SetLifeSpan(DestroyAfterKillSeconds);
+		}
+		else
+		{
+			if (AttackerInstigatorActor != this)
+			{
+				GetController<ASAIController>()->SetCurrentTargetActor(AttackerInstigatorActor);
+			}
+		}
 	}
 }

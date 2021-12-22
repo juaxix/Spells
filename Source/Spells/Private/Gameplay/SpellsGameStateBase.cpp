@@ -1,18 +1,17 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-#include "SpellsGameModeBase.h"
+#include "Gameplay/SpellsGameStateBase.h"
 
 /// Unreal includes
 #include "GameFramework/GameStateBase.h" 
 #include "GameFramework/PlayerState.h"
 #include "Player/SCharacter.h"
 
-// @todo move to the game state (accessible by all)
-TArray<ASCharacter*> ASpellsGameModeBase::GetAllPlayers() const
+TArray<ASCharacter*> ASpellsGameStateBase::GetAllPlayers() const
 {
 	TArray<ASCharacter*> Characters;
-	Characters.Reserve(GameState->PlayerArray.Num());
-	for (const APlayerState* Player : GameState->PlayerArray)
+	Characters.Reserve(PlayerArray.Num());
+	for (const APlayerState* Player : PlayerArray)
 	{
 		if (ASCharacter* Character = Cast<ASCharacter>(Player->GetPawn()))
 		{

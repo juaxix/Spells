@@ -23,10 +23,20 @@ void ASAIController::BeginPlay()
 
 bool ASAIController::SetCurrentTargetActor(AActor* InActor)
 {
+	if (!IsValid(InActor))
+	{
+		return false;
+	}
+
 	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
 	{
 		if (MoveToActorBBKeyID != FBlackboard::InvalidKey)
 		{
+			if (BlackboardComponent->GetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID) == InActor)
+			{
+				return true;
+			}
+
 			return BlackboardComponent->SetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID, InActor);
 		}
 	}
