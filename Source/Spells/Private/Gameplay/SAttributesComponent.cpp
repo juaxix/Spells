@@ -1,5 +1,5 @@
 // Spells - xixgames - juaxix - 2021/2022
-#include "Player/SAttributesComponent.h"
+#include "Gameplay/SAttributesComponent.h"
 
 USAttributesComponent::USAttributesComponent()
 {

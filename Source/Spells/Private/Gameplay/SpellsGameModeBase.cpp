@@ -8,7 +8,7 @@
 
 // Spells includes
 #include "AI/SAICharacter.h"
-#include "Player/SAttributesComponent.h"
+#include "Gameplay/SAttributesComponent.h"
 
 void ASpellsGameModeBase::StartPlay()
 {

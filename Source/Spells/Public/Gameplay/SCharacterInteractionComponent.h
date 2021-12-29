@@ -16,7 +16,7 @@ public:
 	USCharacterInteractionComponent();
 
 	virtual void PrimaryAction();
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 	float MaxInteractionDistance = 1000.0f;
 

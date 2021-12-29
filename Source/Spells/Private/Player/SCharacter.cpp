@@ -2,15 +2,18 @@
 
 #include "Player/SCharacter.h"
 
+// Unreal includes
+#include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
-#include "Attacks/SMagicProjectile.h"
-#include "Camera/CameraComponent.h" 
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Gameplay/SCharacterInteractionComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Player/SAttributesComponent.h"
+
+// Spells includes
+#include "Attacks/SMagicProjectile.h"
+#include "Gameplay/SCharacterInteractionComponent.h"
+#include "Gameplay/SAttributesComponent.h"
 
 namespace
 {
@@ -75,6 +78,7 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 		if (NewHealth <= 0.0f)
 		{
 			DisableInput(Cast<APlayerController>(GetController()));
+			SetCanBeDamaged(false);
 		}
 
 		if (CameraShake)
@@ -82,7 +86,6 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 			if (APlayerController* PC = Cast<APlayerController>(GetController()))
 			{
 				PC->ClientStartCameraShake(CameraShake, 10);
-				//PC->PlayerCameraManager->PlayWorldCameraShake(GetWorld(), CameraShake, GetActorLocation(), 10.0f, 0.0f, 0.1f);
 			}
 		}
 	}

@@ -10,7 +10,7 @@
 
 /// Spells game includes
 #include "AI/SAIController.h"
-#include "Player/SAttributesComponent.h"
+#include "Gameplay/SAttributesComponent.h"
 
 namespace
 {
@@ -64,7 +64,7 @@ void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, class USAtt
 			USkeletalMeshComponent* SkeletalMeshComponent = GetMesh();
 			SkeletalMeshComponent->SetCollisionProfileName("Ragdoll");
 			SkeletalMeshComponent->SetAllBodiesSimulatePhysics(true);
-			
+			SetCanBeDamaged(false);
 			SetLifeSpan(DestroyAfterKillSeconds);
 		}
 		else

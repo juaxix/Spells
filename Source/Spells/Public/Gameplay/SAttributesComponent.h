@@ -22,6 +22,12 @@ class SPELLS_API USAttributesComponent : public UActorComponent
 public:	
 	USAttributesComponent();
 
+	UFUNCTION(BlueprintPure, Category = "Spells|Attributes")
+	static USAttributesComponent* GetAttributesComponent(const AActor* FromActor)
+	{
+		return IsValid(FromActor) ? Cast<USAttributesComponent>(FromActor->GetComponentByClass(USAttributesComponent::StaticClass())) : nullptr;
+	}
+
 	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
 	bool IsAlive() const
 	{

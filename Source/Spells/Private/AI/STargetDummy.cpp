@@ -1,11 +1,11 @@
 // Spells - xixgames - juaxix - 2021/2022
 #include "AI/STargetDummy.h"
 
-/// Unreal includes
+// Unreal includes
 #include "Components\StaticMeshComponent.h"
 
-/// Spells includes
-#include "Player/SAttributesComponent.h"
+// Spells includes
+#include "Gameplay/SAttributesComponent.h"
 
 namespace
 {

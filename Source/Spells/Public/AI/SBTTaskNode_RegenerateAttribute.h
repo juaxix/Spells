@@ -2,9 +2,14 @@
 
 #pragma once
 
+// Engine includes
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "Player/SAttributesComponent.h"
+
+// Spells Game includes
+#include "Gameplay/SAttributesComponent.h"
+
+// generated include
 #include "SBTTaskNode_RegenerateAttribute.generated.h"
 
 UCLASS()

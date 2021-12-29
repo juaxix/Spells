@@ -1,12 +1,14 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-
 #include "AI/SBTService_ShouldTakeCover.h"
 
+// Unreal includes
+#include "BehaviorTree/BlackboardComponent.h"
+
+// Spells Game includes
 #include "AI/SAICharacter.h"
 #include "AI/SAIController.h"
-#include "BehaviorTree/BlackboardComponent.h"
-#include "Player/SAttributesComponent.h"
+#include "Gameplay/SAttributesComponent.h"
 
 void USBTService_ShouldTakeCover::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {

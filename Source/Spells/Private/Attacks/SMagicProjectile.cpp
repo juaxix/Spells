@@ -2,10 +2,13 @@
 
 #include "Attacks/SMagicProjectile.h"
 
+// Unreal includes
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "Player/SAttributesComponent.h"
+
+// Spells includes
+#include "Gameplay/SAttributesComponent.h"
 #include "Player/SCharacter.h"
 
 ASMagicProjectile::ASMagicProjectile()
@@ -38,10 +41,13 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 	APawn* ThisInstigator = GetInstigator();
 	if (IsValid(OtherActor) && IsValid(ThisInstigator) && OtherActor != ThisInstigator )
 	{
-		if (USAttributesComponent* Attributes = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass())))
+		if (OtherActor->CanBeDamaged())
 		{
-			Attributes->ApplyHealthChange(-Damage, ThisInstigator, SweepResult);
-			OnProjectileStopped(SweepResult);
+			if (USAttributesComponent* Attributes = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass())))
+			{
+				Attributes->ApplyHealthChange(-Damage, ThisInstigator, SweepResult);
+				OnProjectileStopped(SweepResult);
+			}
 		}
 	}
 }

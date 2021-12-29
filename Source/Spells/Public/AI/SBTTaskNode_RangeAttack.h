@@ -19,4 +19,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Attack", BlueprintReadOnly)
 	TSubclassOf<AActor> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = "Attack", BlueprintReadWrite, meta = (Tooltip = "Min and Max Degrees to change the direction upon shoot"))
+	float MaxBulletSpread = 2.0f;
 };
