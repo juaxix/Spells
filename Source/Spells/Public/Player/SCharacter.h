@@ -10,6 +10,7 @@
 
 class ASMagicProjectile;
 class UAnimMontage;
+class USActionsComponent;
 class USAttributesComponent;
 class UCameraComponent;
 class USCharacterInteractionComponent;
@@ -57,6 +58,18 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
 	USAttributesComponent* GetAttributesComponent() const {return AttributesComponent;}
+
+	/** 
+	* Make the character sprint on the next update.	 
+	*/
+	UFUNCTION(BlueprintCallable, Category="Spells|Character")
+	virtual void SprintStart();
+
+	/** 
+	* Make the character stops sprinting on the next update.	 
+	*/
+	UFUNCTION(BlueprintCallable, Category="Spells|Character")
+	virtual void SprintStop();
 
 	virtual void BeginPlay() override;
 
@@ -109,7 +122,7 @@ public:
 #endif
 	}
 
-	
+public:
 	UPROPERTY(VisibleAnywhere, Category = "Player")
 	UCameraComponent* CameraComponent = nullptr;
 
@@ -119,8 +132,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
 	USCharacterInteractionComponent* CharacterInteractionComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Attributes")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	USAttributesComponent* AttributesComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions")
+	USActionsComponent* ActionsComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* PrimaryAttackAnimMontage = nullptr;

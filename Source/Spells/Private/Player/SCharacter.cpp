@@ -15,6 +15,7 @@
 
 // Spells includes
 #include "Attacks/SMagicProjectile.h"
+#include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
 #include "Gameplay/SAttributesComponent.h"
 
@@ -29,6 +30,7 @@ namespace
 	const FName SSPECIAL_ATTACK_KEY = TEXT("SpecialAttack");
 	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
+	const FName SSPRINT_KEY = TEXT("Sprint");
 	const FName SRIGHT_HAND_SOCKET = TEXT("Muzzle_01");
 
 	constexpr float MaxHitScanDistanceLook = 10000.0f;
@@ -47,11 +49,11 @@ ASCharacter::ASCharacter()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>("AttributesComponent");
+	ActionsComponent = CreateDefaultSubobject<USActionsComponent>("ActionsComponent");
+	CharacterInteractionComponent = CreateDefaultSubobject<USCharacterInteractionComponent>(TEXT("InteractionComponent"));
 
 	SpringArmComponent->SetupAttachment(RootComponent);
 	CameraComponent->SetupAttachment(SpringArmComponent);
-
-	CharacterInteractionComponent = CreateDefaultSubobject<USCharacterInteractionComponent>(TEXT("InteractionComponent"));
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -75,6 +77,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(SSPECIAL_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SpecialAttackInputAction);
 
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
+
+	PlayerInputComponent->BindAction(SSPRINT_KEY, IE_Pressed, this, &ASCharacter::SprintStart);
+	PlayerInputComponent->BindAction(SSPRINT_KEY, IE_Released, this, &ASCharacter::SprintStop);
 
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
@@ -116,6 +121,16 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 			}
 		}
 	}
+}
+
+void ASCharacter::SprintStart()
+{
+	ActionsComponent->StartActionByName(this, SSPRINT_KEY);
+}
+
+void ASCharacter::SprintStop()
+{
+	ActionsComponent->StopActionByName(this, SSPRINT_KEY);
 }
 
 void ASCharacter::BeginPlay()
