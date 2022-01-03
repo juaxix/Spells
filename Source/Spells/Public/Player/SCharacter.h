@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Gameplay/SAttributesComponent.h"
 #include "SCharacter.generated.h"
 
 class ASMagicProjectile;
@@ -14,6 +15,8 @@ class UCameraComponent;
 class USCharacterInteractionComponent;
 class USkeletalMeshSocket;
 class USpringArmComponent;
+class UUserWidget;
+class USWorldUserWidget;
 
 UENUM(BlueprintType)
 enum class ESAimModes: uint8
@@ -34,7 +37,14 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
-	virtual void PrimaryAttackAnimNotif() { DoMagicalAttack(PrimaryAttackProjectileClass); }
+	virtual void PrimaryAttackAnimNotif()
+	{
+		DoMagicalAttack(PrimaryAttackProjectileClass);
+		if (bPressingFire1 && AttributesComponent->IsAlive())
+		{
+			PrimaryAttackInputAction();
+		}
+	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
 	virtual void SecundaryAttackAnimNotif() { DoMagicalAttack(SecundaryAttackProjectileClass); }
@@ -50,7 +60,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+#if !UE_BUILD_SHIPPING
 	virtual void Tick(float DeltaSeconds) override;
+#endif
 
 	virtual void PostInitializeComponents() override;
 
@@ -61,6 +73,12 @@ public:
 	virtual void PrimaryAttackInputAction()
 	{
 		PlayAnimMontage(PrimaryAttackAnimMontage);
+		bPressingFire1 = true;
+	}
+
+	virtual void PrimaryAttackInputActionStops()
+	{
+		bPressingFire1 = false;
 	}
 
 	virtual void SecundaryAttackInputAction()
@@ -75,8 +93,23 @@ public:
 
 	virtual void DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass);
 
+#if !UE_BUILD_SHIPPING
 	virtual void DrawDebug();
+#endif
 
+	UFUNCTION(Exec)
+	virtual void HealSelf()
+	{
+#if !UE_BUILD_SHIPPING
+		AttributesComponent->ApplyHealthChange(
+			AttributesComponent->GetMaximumHealth()-AttributesComponent->GetCurrentHealth(), 
+			this, FHitResult());
+#else
+		UE_LOG(LogTemp, Log, TEXT("Disabled"));
+#endif
+	}
+
+	
 	UPROPERTY(VisibleAnywhere, Category = "Player")
 	UCameraComponent* CameraComponent = nullptr;
 
@@ -116,8 +149,21 @@ public:
 	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
 	UParticleSystem* MuzzleParticleSystem = nullptr;
 
-	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake to perform on receiving an attack"))
 	TSubclassOf<class UCameraShakeBase> CameraShake;
+
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
+	int32 CameraShakeScale = 10;
+
+	uint8 bPressingFire1:1;
+
+	/* TODO -- remote player health bar
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "UI")
+	USWorldUserWidget* WorldHealthBar = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WorldHealthBarClass = nullptr;
+	*/
 private:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* RightHandSocket = nullptr;

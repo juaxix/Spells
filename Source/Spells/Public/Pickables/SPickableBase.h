@@ -41,4 +41,10 @@ protected:
 
 	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USoundBase* DropSound = nullptr;
+
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 CreditsCost = 0;
+
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 CreditsGranted = 0;
 };

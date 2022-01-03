@@ -8,7 +8,7 @@
 #include "Particles/ParticleSystemComponent.h"
 
 // Spells includes
-#include "Gameplay/SAttributesComponent.h"
+#include "Gameplay/SGameplayBlueprintFunctions.h"
 #include "Player/SCharacter.h"
 
 ASMagicProjectile::ASMagicProjectile()
@@ -39,15 +39,11 @@ void ASMagicProjectile::OnSphereActorHit_Implementation(UPrimitiveComponent* Hit
 void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APawn* ThisInstigator = GetInstigator();
-	if (IsValid(OtherActor) && IsValid(ThisInstigator) && OtherActor != ThisInstigator )
+	if (IsValid(OtherActor) && OtherActor != ThisInstigator )
 	{
-		if (OtherActor->CanBeDamaged())
+		if (USGameplayBlueprintFunctions::ApplyDamage(ThisInstigator, OtherActor, Damage, SweepResult))
 		{
-			if (USAttributesComponent* Attributes = Cast<USAttributesComponent>(OtherActor->GetComponentByClass(USAttributesComponent::StaticClass())))
-			{
-				Attributes->ApplyHealthChange(-Damage, ThisInstigator, SweepResult);
-				OnProjectileStopped(SweepResult);
-			}
+			OnProjectileStopped(SweepResult);
 		}
 	}
 }

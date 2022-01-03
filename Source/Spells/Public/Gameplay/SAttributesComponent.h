@@ -29,10 +29,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
-	bool IsAlive() const
-	{
-		return Health > 0.0f;
-	}
+	bool IsAlive() const { return Health > 0.0f;}
 	
 	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
 	bool IsFullHealth() const { return Health == MaxHealth; }
@@ -45,6 +42,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
 	float GetMaximumHealth() const { return MaxHealth; }
+
+	UFUNCTION(Exec, BlueprintCallable, BlueprintPure = false, Category = "Spells|Health")
+	void Kill(AActor* KillerActor = nullptr) { ApplyHealthChange(-MaxHealth, KillerActor, FHitResult()); }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Health")
 	FSOnHealthAttributeChanged OnHealthAttributeChanged;

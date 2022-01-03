@@ -3,6 +3,7 @@
 #include "AI/SAICharacter.h"
 
 /// Unreal includes
+#include "Components/CapsuleComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BrainComponent.h"
 #include "DrawDebugHelpers.h"
@@ -10,6 +11,7 @@
 
 /// Spells game includes
 #include "AI/SAIController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Gameplay/SAttributesComponent.h"
 
 namespace
@@ -24,6 +26,8 @@ ASAICharacter::ASAICharacter()
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>(TEXT("AttributesComponent"));
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
+	GetMesh()->SetGenerateOverlapEvents(true);
 }
 
 void ASAICharacter::BeginPlay()
@@ -64,6 +68,8 @@ void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, class USAtt
 			USkeletalMeshComponent* SkeletalMeshComponent = GetMesh();
 			SkeletalMeshComponent->SetCollisionProfileName("Ragdoll");
 			SkeletalMeshComponent->SetAllBodiesSimulatePhysics(true);
+			GetCharacterMovement()->DisableMovement();
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			SetCanBeDamaged(false);
 			SetLifeSpan(DestroyAfterKillSeconds);
 		}

@@ -3,8 +3,11 @@
 #include "Player/SCharacter.h"
 
 // Unreal includes
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
+#if !UE_BUILD_SHIPPING
 #include "DrawDebugHelpers.h"
+#endif
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -37,6 +40,7 @@ namespace
 ASCharacter::ASCharacter()
 	: PrimaryAttackProjectileClass(ASMagicProjectile::StaticClass())
 	, bDebugMode(false)
+	, bPressingFire1(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -50,6 +54,7 @@ ASCharacter::ASCharacter()
 	CharacterInteractionComponent = CreateDefaultSubobject<USCharacterInteractionComponent>(TEXT("InteractionComponent"));
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
 	SpringArmComponent->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
 }
@@ -65,9 +70,12 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(STURN_AXIS, this, &APawn::AddControllerYawInput);
 
 	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttackInputAction);
+	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Released, this, &ASCharacter::PrimaryAttackInputActionStops);
 	PlayerInputComponent->BindAction(SSECUNDARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SecundaryAttackInputAction);
 	PlayerInputComponent->BindAction(SSPECIAL_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SpecialAttackInputAction);
+
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
+
 	PlayerInputComponent->BindAction(SPRIMARY_ACTION_KEY, IE_Pressed, CharacterInteractionComponent, &USCharacterInteractionComponent::PrimaryAction);
 }
 
@@ -75,17 +83,36 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 {
 	if (Delta < 0.0f)
 	{
+		APlayerController* PlayerController = GetController<APlayerController>();
 		if (NewHealth <= 0.0f)
 		{
-			DisableInput(Cast<APlayerController>(GetController()));
+			DisableInput(PlayerController);
 			SetCanBeDamaged(false);
-		}
-
-		if (CameraShake)
-		{
-			if (APlayerController* PC = Cast<APlayerController>(GetController()))
+			bPressingFire1 = false;
+			/* TODO -- remote player health bar
+			if (IsValid(WorldHealthBar))
 			{
-				PC->ClientStartCameraShake(CameraShake, 10);
+				WorldHealthBar->RemoveFromParent();
+				WorldHealthBar = nullptr;
+			}*/
+		}
+		else 
+		{
+			if (IsValid(PlayerController))
+			{
+				/* TODO -- remote player health bar
+				if (!IsValid(WorldHealthBar) && WorldHealthBarClass)
+				{
+					WorldHealthBar = CreateWidget<USWorldUserWidget>(PlayerController, WorldHealthBarClass);
+					check(WorldHealthBar);
+					WorldHealthBar->AttachedActor = this;
+					WorldHealthBar->AddToViewport();
+				}*/
+
+				if (CameraShake)
+				{
+					PlayerController->ClientStartCameraShake(CameraShake, CameraShakeScale);
+				}
 			}
 		}
 	}
@@ -98,12 +125,14 @@ void ASCharacter::BeginPlay()
 	RightHandSocket = GetMesh()->GetSocketByName(SRIGHT_HAND_SOCKET);
 }
 
+#if !UE_BUILD_SHIPPING
 void ASCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
 	DrawDebug();
 }
+#endif
 
 void ASCharacter::PostInitializeComponents()
 {
@@ -164,6 +193,7 @@ void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectil
 	World->SpawnActor<ASMagicProjectile>(MagicProjectileClass, SpawnTransform, SpawnParams);
 }
 
+#if !UE_BUILD_SHIPPING
 void ASCharacter::DrawDebug()
 {
 	const FVector DrawLineStart = GetActorLocation() + GetActorRightVector() * DebugDrawDistance;
@@ -173,4 +203,4 @@ void ASCharacter::DrawDebug()
 	const FVector ControllerDirection_LineEnd = DrawLineStart + (GetControlRotation().Vector() * 100.0f);
 	DrawDebugDirectionalArrow(GetWorld(), DrawLineStart, ControllerDirection_LineEnd, DebugDrawScale, FColor::Green, false, 0.0f, 0, DebugDrawThickness);
 }
-
+#endif

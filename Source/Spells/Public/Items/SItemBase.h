@@ -21,4 +21,10 @@ protected:
 
 	UPROPERTY(Category = "Setup", VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Mesh,Rendering,Physics,Components|StaticMesh", AllowPrivateAccess = "true"))
 	UStaticMeshComponent* LidStaticMesh;
+
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 CreditsGranted = 0;
+
+	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 CreditsCost = 0;
 };

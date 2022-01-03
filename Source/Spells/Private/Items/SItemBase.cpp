@@ -1,6 +1,5 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-
 #include "Items/SItemBase.h"
 
 ASItemBase::ASItemBase()
