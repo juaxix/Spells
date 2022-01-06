@@ -55,3 +55,15 @@ bool USActionsComponent::StopActionByName(AActor* Instigator, const FName& Actio
 	return false;
 }
 
+void USActionsComponent::ReceiveAnimNotif(AActor* Instigator, const FName& ActionName)
+{
+	for (USAction* Action : Actions)
+	{
+		if (Action && ActionName.IsEqual(Action->ActionName))
+		{
+			Action->ReceiveAnimationNotif();
+			return;
+		}
+	}
+}
+

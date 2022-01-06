@@ -14,7 +14,6 @@
 #include "Kismet/GameplayStatics.h"
 
 // Spells includes
-#include "Attacks/SMagicProjectile.h"
 #include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
 #include "Gameplay/SAttributesComponent.h"
@@ -31,18 +30,13 @@ namespace
 	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SSPRINT_KEY = TEXT("Sprint");
-	const FName SRIGHT_HAND_SOCKET = TEXT("Muzzle_01");
-
-	constexpr float MaxHitScanDistanceLook = 10000.0f;
 	constexpr float DebugDrawScale = 100.0f;
 	constexpr float DebugDrawThickness = 5.0f;
 	constexpr float DebugDrawDistance = 100.0f;
 }
 
 ASCharacter::ASCharacter()
-	: PrimaryAttackProjectileClass(ASMagicProjectile::StaticClass())
-	, bDebugMode(false)
-	, bPressingFire1(false)
+	: bDebugMode(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -93,7 +87,7 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 		{
 			DisableInput(PlayerController);
 			SetCanBeDamaged(false);
-			bPressingFire1 = false;
+			
 			/* TODO -- remote player health bar
 			if (IsValid(WorldHealthBar))
 			{
@@ -133,13 +127,6 @@ void ASCharacter::SprintStop()
 	ActionsComponent->StopActionByName(this, SSPRINT_KEY);
 }
 
-void ASCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	// Cache sockets
-	RightHandSocket = GetMesh()->GetSocketByName(SRIGHT_HAND_SOCKET);
-}
-
 #if !UE_BUILD_SHIPPING
 void ASCharacter::Tick(float DeltaSeconds)
 {
@@ -159,54 +146,6 @@ void ASCharacter::PostInitializeComponents()
 	}
 }
 
-void ASCharacter::DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass)
-{
-	ensureAlwaysMsgf(MagicProjectileClass != nullptr, TEXT("PrimaryAttackProjectileClass needs a class"));
-	FRotator ProjectileRotation;
-	UWorld* World = GetWorld();
-	FVector HandLocation = RightHandSocket->GetSocketLocation(GetMesh());
-	
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetOwner()))
-	{
-		ProjectileRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-		switch (AimMode)
-		{
-			default: case ESAimModes::Viewport: break;
-			case ESAimModes::HitScan:
-			{
-				FHitResult Hit;
-				FCollisionQueryParams CollisionQueryParams;
-				CollisionQueryParams.AddIgnoredActor(this);
-				FVector LookStart = PlayerController->PlayerCameraManager->GetCameraLocation();
-				FVector LookEnd = LookStart + PlayerController->PlayerCameraManager->GetActorForwardVector() * MaxHitScanDistanceLook;
-				
-				if (World->LineTraceSingleByObjectType(Hit, LookStart, LookEnd, FCollisionObjectQueryParams::AllObjects, CollisionQueryParams))
-				{
-					LookEnd = Hit.ImpactPoint;
-					if (bDebugMode)
-					{
-						DrawDebugSphere(World, LookEnd, 23.f, 12, FColor::Red, false, 1.5f);
-					}
-
-					ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
-				}
-				
-				break;
-			}
-		}
-	}
-	else
-	{
-		ProjectileRotation = GetControlRotation();
-	}
-
-	const FTransform SpawnTransform = FTransform(ProjectileRotation, HandLocation);
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	SpawnParams.Instigator = this;
-
-	World->SpawnActor<ASMagicProjectile>(MagicProjectileClass, SpawnTransform, SpawnParams);
-}
 
 #if !UE_BUILD_SHIPPING
 void ASCharacter::DrawDebug()

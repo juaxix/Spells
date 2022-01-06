@@ -5,28 +5,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SAttributesComponent.h"
 #include "SCharacter.generated.h"
 
-class ASMagicProjectile;
-class UAnimMontage;
-class USActionsComponent;
-class USAttributesComponent;
-class UCameraComponent;
 class USCharacterInteractionComponent;
-class USkeletalMeshSocket;
 class USpringArmComponent;
-class UUserWidget;
-class USWorldUserWidget;
+class UCameraComponent;
 
-UENUM(BlueprintType)
-enum class ESAimModes: uint8
-{
-	HitScan = 0 UMETA(Tooltip = "Trace to hit for aiming"),
-	Viewport = 1 UMETA(Tooltip = "Use viewport rotation")
-};
-
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class SPELLS_API ASCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -40,19 +27,21 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
 	virtual void PrimaryAttackAnimNotif()
 	{
-		DoMagicalAttack(PrimaryAttackProjectileClass);
-		if (bPressingFire1 && AttributesComponent->IsAlive())
-		{
-			PrimaryAttackInputAction();
-		}
+		ActionsComponent->ReceiveAnimNotif(this, MagicMissileActionName);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
-	virtual void SecundaryAttackAnimNotif() { DoMagicalAttack(SecundaryAttackProjectileClass); }
+	virtual void SecundaryAttackAnimNotif()
+	{
+		ActionsComponent->ReceiveAnimNotif(this, TeleportActionName);
+	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Attack")
-	virtual void SpecialAttackAnimNotif() { DoMagicalAttack(SpecialAttackProjectileClass); }
-
+	virtual void SpecialAttackAnimNotif()
+	{
+		ActionsComponent->ReceiveAnimNotif(this, BlackholeActionName);
+	}
+	
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit);
 
@@ -71,8 +60,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Spells|Character")
 	virtual void SprintStop();
 
-	virtual void BeginPlay() override;
-
 #if !UE_BUILD_SHIPPING
 	virtual void Tick(float DeltaSeconds) override;
 #endif
@@ -85,27 +72,24 @@ public:
 
 	virtual void PrimaryAttackInputAction()
 	{
-		PlayAnimMontage(PrimaryAttackAnimMontage);
-		bPressingFire1 = true;
+		ActionsComponent->StartActionByName(this, MagicMissileActionName);
 	}
 
 	virtual void PrimaryAttackInputActionStops()
 	{
-		bPressingFire1 = false;
+		ActionsComponent->StopActionByName(this, MagicMissileActionName);
 	}
 
 	virtual void SecundaryAttackInputAction()
 	{
-		PlayAnimMontage(SecundaryAttackAnimMontage);
+		ActionsComponent->StartActionByName(this, TeleportActionName);
 	}
 
 	virtual void SpecialAttackInputAction()
 	{
-		PlayAnimMontage(SpecialAttackAnimMontage);
+		ActionsComponent->StartActionByName(this, BlackholeActionName);
 	}
-
-	virtual void DoMagicalAttack(TSubclassOf<ASMagicProjectile>& MagicProjectileClass);
-
+	
 #if !UE_BUILD_SHIPPING
 	virtual void DrawDebug();
 #endif
@@ -137,30 +121,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions")
 	USActionsComponent* ActionsComponent = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	UAnimMontage* PrimaryAttackAnimMontage = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	UAnimMontage* SecundaryAttackAnimMontage = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	UAnimMontage* SpecialAttackAnimMontage = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<ASMagicProjectile> PrimaryAttackProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<ASMagicProjectile> SecundaryAttackProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TSubclassOf<ASMagicProjectile> SpecialAttackProjectileClass;
+	
 
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	uint8 bDebugMode:1;
-
-	UPROPERTY(EditAnywhere, Category = "Setup")
-	ESAimModes AimMode = ESAimModes::Viewport;
 
 	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
 	UParticleSystem* MuzzleParticleSystem = nullptr;
@@ -171,8 +135,10 @@ public:
 	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
 	int32 CameraShakeScale = 10;
 
-	uint8 bPressingFire1:1;
-
+	const FName MagicMissileActionName = "MagicMissile";
+	const FName TeleportActionName = "Teleport";
+	const FName BlackholeActionName = "Blackhole";
+	
 	/* TODO -- remote player health bar
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "UI")
 	USWorldUserWidget* WorldHealthBar = nullptr;
@@ -180,7 +146,5 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> WorldHealthBarClass = nullptr;
 	*/
-private:
-	UPROPERTY(Transient)
-	USkeletalMeshSocket const* RightHandSocket = nullptr;
+
 };

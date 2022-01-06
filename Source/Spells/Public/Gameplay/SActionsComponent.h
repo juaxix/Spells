@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
 	bool StopActionByName(AActor* Instigator, const FName& ActionName);
 
+	UFUNCTION(BlueprintCallable, Category = "Spells|Animation")
+	virtual void ReceiveAnimNotif(AActor* Instigator, const FName& ActionName);
+
 protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|Actions", meta = (AllowPrivateAccess = true))
 	TArray<USAction*> Actions;

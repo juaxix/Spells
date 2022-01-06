@@ -4,7 +4,6 @@
 
 // Engine includes
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "SAction.generated.h"
 
 /**
@@ -21,7 +20,18 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Actions")
 	void StopAction(AActor* Instigator);
+	
+	virtual void ReceiveAnimationNotif(){}
 
+	virtual UWorld* GetWorld() const override
+	{
+		if (UActorComponent* ActorComponent = Cast<UActorComponent>(GetOuter()))
+		{
+			return ActorComponent->GetWorld();
+		}
+
+		return nullptr;
+	}
 
 	/* Action nickname to start/stop without a reference to the object */
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions")
