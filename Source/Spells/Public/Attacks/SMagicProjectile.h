@@ -27,6 +27,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Projectile")
 	void OnSphereActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnSphereActorHit_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+	{
+		OnSphereActorOverlap(HitComponent, OtherActor, OtherComp, 0, false, Hit);
+	}
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spells|Projectile")
 	void OnProjectileStopped(const FHitResult& ImpactResult);

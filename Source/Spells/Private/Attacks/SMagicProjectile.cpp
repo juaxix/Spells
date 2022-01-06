@@ -31,10 +31,7 @@ ASMagicProjectile::ASMagicProjectile()
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;
 }
 
-void ASMagicProjectile::OnSphereActorHit_Implementation(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
-{
-	OnSphereActorOverlap(HitComponent, OtherActor, OtherComp, 0, false, Hit);
-}
+
 
 void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

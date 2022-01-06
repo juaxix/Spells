@@ -19,7 +19,8 @@ bool USGameplayBlueprintFunctions::ApplyDamage(AActor* DamageCauser, AActor* Tar
 				UPrimitiveComponent* HitComp = HitResult.GetComponent();
 				if (HitComp && HitComp->IsSimulatingPhysics(HitResult.BoneName))
 				{
-					HitComp->AddImpulseAtLocation(-HitResult.ImpactNormal * Spells_CVarApplyDamageForce.GetValueOnAnyThread(), HitResult.ImpactPoint, HitResult.BoneName);
+					const FVector Direction = (HitResult.TraceEnd - HitResult.TraceStart).GetSafeNormal();
+					HitComp->AddImpulseAtLocation(Direction * Spells_CVarApplyDamageForce.GetValueOnAnyThread(), HitResult.ImpactPoint, HitResult.BoneName);
 				}
 			}
 
