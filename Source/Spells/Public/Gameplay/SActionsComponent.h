@@ -4,6 +4,7 @@
 
 // Engine includes
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 
 #include "SActionsComponent.generated.h"
@@ -20,6 +21,16 @@ class SPELLS_API USActionsComponent : public UActorComponent
 
 public:
 	USActionsComponent();
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
+	{
+		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+		if (GEngine)
+		{
+			FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, DebugMsg);
+		}
+	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
 	void AddAction(TSubclassOf<USAction> ActionClass);
@@ -32,6 +43,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Spells|Animation")
 	virtual void ReceiveAnimNotif(AActor* Instigator, const FName& ActionName);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Tags")
+	FGameplayTagContainer ActiveGameplayTags;
 
 protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|Actions", meta = (AllowPrivateAccess = true))

@@ -3,10 +3,14 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+// Spells includes
 #include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SAttributesComponent.h"
+
 #include "SCharacter.generated.h"
 
 class USCharacterInteractionComponent;

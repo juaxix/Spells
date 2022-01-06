@@ -30,9 +30,18 @@ bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& Acti
 	{
 		if (Action && ActionName.IsEqual(Action->ActionName))
 		{
-			Action->StartAction(Instigator);
+			if (Action->CanStart(Instigator))
+			{
+				Action->StartAction(Instigator);
+				return true;
+			}
 
-			return true;
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, 
+					FString::Printf(TEXT("Failed to execute Action %s"), *ActionName.ToString()));
+			}
+			
 		}
 	}
 
@@ -43,10 +52,9 @@ bool USActionsComponent::StopActionByName(AActor* Instigator, const FName& Actio
 {
 	for (USAction* Action : Actions)
 	{
-		if (Action && ActionName.IsEqual(Action->ActionName))
+		if (Action && ActionName.IsEqual(Action->ActionName) && Action->IsActive())
 		{
 			Action->StopAction(Instigator);
-			// Actions.Remove(Action); TODO remove?
 
 			return true;
 		}
@@ -62,6 +70,7 @@ void USActionsComponent::ReceiveAnimNotif(AActor* Instigator, const FName& Actio
 		if (Action && ActionName.IsEqual(Action->ActionName))
 		{
 			Action->ReceiveAnimationNotif();
+
 			return;
 		}
 	}

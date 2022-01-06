@@ -8,7 +8,7 @@ public class Spells : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "GameplayTasks", "UMG" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "GameplayTasks", "GameplayTags", "UMG" });
 
 		PublicIncludePaths.Add(ModuleDirectory + "/Public");
 		PrivateIncludePaths.Add(ModuleDirectory+ "/Private");

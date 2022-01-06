@@ -28,7 +28,7 @@ public:
 		bRepeatedAction = false;
 	}
 
-	virtual void ReceiveAnimationNotif() override;
+	virtual void ReceiveAnimationNotif_Implementation() override;
 
 protected:
 	bool DoMagicalAttack();

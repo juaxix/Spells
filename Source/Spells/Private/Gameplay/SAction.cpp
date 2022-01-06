@@ -2,13 +2,24 @@
 
 #include "Gameplay/SAction.h"
 
+// Spells includes
+#include "Gameplay/SActionsComponent.h"
+
 void USAction::StartAction_Implementation(AActor* Instigator)
 {
-	UE_LOG(LogTemp, Log, TEXT("Starting: %s"), *GetNameSafe(this));
+	GetOwningComponent()->ActiveGameplayTags.AppendTags(GrantTags);
+	bIsActive = true;
 }
 
 void USAction::StopAction_Implementation(AActor* Instigator)
 {
-	UE_LOG(LogTemp, Log, TEXT("Stopping: %s"), *GetNameSafe(this));
+	ensureAlwaysMsgf(bIsActive, TEXT("An action must be active to be able to stop it"));
+	GetOwningComponent()->ActiveGameplayTags.RemoveTags(GrantTags);
+	bIsActive = false;
 }
 
+USActionsComponent* USAction::GetOwningComponent() const
+{
+	// the instigator could be anything so we need to use the outer that is the creator of this action
+	return Cast<USActionsComponent>(GetOuter());
+}

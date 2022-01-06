@@ -31,13 +31,20 @@ void USMagicProjectileAttack_Action::StartAction_Implementation(AActor* Instigat
 	}
 }
 
-void USMagicProjectileAttack_Action::ReceiveAnimationNotif()
+void USMagicProjectileAttack_Action::ReceiveAnimationNotif_Implementation()
 {
-	Super::ReceiveAnimationNotif();
+	Super::ReceiveAnimationNotif_Implementation();
 	DoMagicalAttack();
-	if (bRepeatedAction)
+	if (bIsActive)
 	{
-		Character->PlayAnimMontage(AnimMontage);
+		if (bRepeatedAction)
+		{
+			Character->PlayAnimMontage(AnimMontage);
+		}
+		else
+		{
+			StopAction_Implementation(Character);
+		}
 	}
 }
 
