@@ -2,8 +2,11 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
+
 #include "SMagicProjectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -52,4 +55,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = true))
 	float Damage = 20.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = true))
+	FGameplayTag CounterSpellTag;
 };

@@ -1,12 +1,14 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-
 #include "Attacks/SMagicProjectileAttack_Action.h"
 
+// Unreal includes
 #include "DrawDebugHelpers.h"
-#include "Attacks/SMagicProjectile.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/Character.h"
+
+// Spells includes
+#include "Attacks/SMagicProjectile.h"
 
 namespace
 {

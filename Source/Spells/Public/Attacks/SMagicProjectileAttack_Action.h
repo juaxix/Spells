@@ -18,7 +18,8 @@ public:
 	USMagicProjectileAttack_Action()
 		: bIsRepeatedAttack(false)
 		, bRepeatedAction(false)
-	{}
+	{
+	}
 
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 

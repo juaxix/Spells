@@ -9,6 +9,7 @@
 
 // Spells includes
 #include "Gameplay/SGameplayBlueprintFunctions.h"
+#include "Gameplay/SActionsComponent.h"
 #include "Player/SCharacter.h"
 
 ASMagicProjectile::ASMagicProjectile()
@@ -31,13 +32,22 @@ ASMagicProjectile::ASMagicProjectile()
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;
 }
 
-
-
 void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APawn* ThisInstigator = GetInstigator();
 	if (IsValid(OtherActor) && OtherActor != ThisInstigator )
 	{
+		if (const USActionsComponent* ActionsComponent = Cast<USActionsComponent>(OtherActor->GetComponentByClass(USActionsComponent::StaticClass())))
+		{
+			if (ActionsComponent->ActiveGameplayTags.HasTag(CounterSpellTag))
+			{
+				ProjectileMovementComponent->Velocity = -ProjectileMovementComponent->Velocity/2.0f; // this also inverts the rotation
+				SetInstigator(Cast<APawn>(OtherActor));
+
+				return;
+			}
+		}
+
 		if (USGameplayBlueprintFunctions::ApplyDamage(ThisInstigator, OtherActor, Damage, SweepResult))
 		{
 			OnProjectileStopped(SweepResult);
