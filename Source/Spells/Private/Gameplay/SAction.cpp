@@ -20,6 +20,6 @@ void USAction::StopAction_Implementation(AActor* Instigator)
 
 USActionsComponent* USAction::GetOwningComponent() const
 {
-	// the instigator could be anything so we need to use the outer that is the creator of this action
+	// the instigator could be anything so we need to use the outer that is the component creator of this action
 	return Cast<USActionsComponent>(GetOuter());
 }

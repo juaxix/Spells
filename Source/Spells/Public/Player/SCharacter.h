@@ -45,6 +45,12 @@ public:
 	{
 		ActionsComponent->ReceiveAnimNotif(this, BlackholeActionName);
 	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Spells|Defense")
+	virtual void DefenseAnimNotif()
+	{
+		ActionsComponent->ReceiveAnimNotif(this, CounterSpellActionName);
+	}
 	
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USAttributesComponent* OwningAttributesComp, float NewHealth, float Delta, const FHitResult& Hit);
@@ -74,7 +80,7 @@ public:
 	virtual void MoveForward(float Value) { AddMovementInput(FRotator(0.0f, GetControlRotation().Yaw, 0.0f).Vector(), Value);}
 	virtual void MoveRight(float Value) { AddMovementInput(FRotationMatrix(FRotator(0.0f, GetControlRotation().Yaw, 0.0f)).GetScaledAxis(EAxis::Y), Value); }
 
-	virtual void PrimaryAttackInputAction()
+	virtual void PrimaryAttackInputActionStarts()
 	{
 		ActionsComponent->StartActionByName(this, MagicMissileActionName);
 	}
@@ -92,6 +98,11 @@ public:
 	virtual void SpecialAttackInputAction()
 	{
 		ActionsComponent->StartActionByName(this, BlackholeActionName);
+	}
+	
+	virtual void DefenseInputAction()
+	{
+		ActionsComponent->StartActionByName(this, CounterSpellActionName);
 	}
 	
 #if !UE_BUILD_SHIPPING
@@ -125,7 +136,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions")
 	USActionsComponent* ActionsComponent = nullptr;
-	
 
 	UPROPERTY(EditAnywhere, Category = "Setup")
 	uint8 bDebugMode:1;
@@ -139,10 +149,11 @@ public:
 	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
 	int32 CameraShakeScale = 10;
 
-	const FName MagicMissileActionName = "MagicMissile";
-	const FName TeleportActionName = "Teleport";
-	const FName BlackholeActionName = "Blackhole";
-	
+	const FName MagicMissileActionName = TEXT("MagicMissile");
+	const FName TeleportActionName = TEXT("Teleport");
+	const FName BlackholeActionName = TEXT("Blackhole");
+	const FName CounterSpellActionName = TEXT("CounterSpell");
+
 	/* TODO -- remote player health bar
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "UI")
 	USWorldUserWidget* WorldHealthBar = nullptr;

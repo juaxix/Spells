@@ -12,6 +12,7 @@
  */
 class UPawnSensingComponent;
 
+class USActionsComponent;
 class USAttributesComponent;
 
 UCLASS()
@@ -37,7 +38,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
 	USAttributesComponent* GetAttributesComponent() const { return AttributesComponent; }
-	
+
+	UFUNCTION(BlueprintPure, Category = "Spells|Player|Actions") FORCEINLINE
+	USActionsComponent* GetActionsComponent() const { return ActionsComponent; }
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
 	float ProjectileDamage = 10.0f;
 
@@ -50,6 +54,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USAttributesComponent* AttributesComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USActionsComponent* ActionsComponent = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (ClampMin=1.0f, ClampMax=100.0f, UIMin=1.0f, UIMax=100.0f))
 	float DestroyAfterKillSeconds = 9.0f;

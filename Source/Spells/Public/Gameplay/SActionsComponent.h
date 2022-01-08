@@ -20,7 +20,12 @@ class SPELLS_API USActionsComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	USActionsComponent();
+	USActionsComponent()
+	{
+		PrimaryComponentTick.bCanEverTick = true;
+	}
+	
+	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
 	{
@@ -48,6 +53,9 @@ public:
 	FGameplayTagContainer ActiveGameplayTags;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = true, Tooltip = "Actions classes to be instanced on start"))
+	TArray<TSubclassOf<USAction>> DefaultActions;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|Actions", meta = (AllowPrivateAccess = true))
 	TArray<USAction*> Actions;
 };

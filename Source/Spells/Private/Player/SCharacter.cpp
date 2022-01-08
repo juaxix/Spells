@@ -27,6 +27,7 @@ namespace
 	const FName SPRIMARY_ATTACK_KEY = TEXT("PrimaryAttack");
 	const FName SSECUNDARY_ATTACK_KEY = TEXT("SecundaryAttack");
 	const FName SSPECIAL_ATTACK_KEY = TEXT("SpecialAttack");
+	const FName SDEFENSE_KEY = TEXT("Defense");
 	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SSPRINT_KEY = TEXT("Sprint");
@@ -65,10 +66,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(SLOOKUP_AXIS, this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis(STURN_AXIS, this, &APawn::AddControllerYawInput);
 
-	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttackInputAction);
+	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::PrimaryAttackInputActionStarts);
 	PlayerInputComponent->BindAction(SPRIMARY_ATTACK_KEY, IE_Released, this, &ASCharacter::PrimaryAttackInputActionStops);
 	PlayerInputComponent->BindAction(SSECUNDARY_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SecundaryAttackInputAction);
 	PlayerInputComponent->BindAction(SSPECIAL_ATTACK_KEY, IE_Pressed, this, &ASCharacter::SpecialAttackInputAction);
+	PlayerInputComponent->BindAction(SDEFENSE_KEY, IE_Pressed, this, &ASCharacter::DefenseInputAction);
 
 	PlayerInputComponent->BindAction(SJUMP_KEY, IE_Pressed, this, &ASCharacter::Jump);
 

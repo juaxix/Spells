@@ -5,10 +5,21 @@
 // Spells game includes
 #include "Gameplay/SAction.h"
 
-USActionsComponent::USActionsComponent()
+#pragma optimize("", off)
+void USActionsComponent::BeginPlay()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	Super::BeginPlay();
+	const UWorld* World = GetWorld();
+
+	if (DefaultActions.Num() > 0 && !GIsCookerLoadingPackage && !GIsEditorLoadingPackage && !HasAnyFlags(RF_ClassDefaultObject) && IsValid(World) && World->IsGameWorld())
+	{
+		for (const TSubclassOf<USAction>& SubAction : DefaultActions)
+		{
+			AddAction(SubAction);
+		}
+	}
 }
+#pragma optimize("", on)
 
 void USActionsComponent::AddAction(TSubclassOf<USAction> ActionClass)
 {

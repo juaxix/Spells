@@ -19,13 +19,13 @@ class SPELLS_API USAction : public UObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Actions")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StartAction(AActor* Instigator);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Actions")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StopAction(AActor* Instigator);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Animation")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Animation")
 	void ReceiveAnimationNotif();
 	virtual void ReceiveAnimationNotif_Implementation(){}
 

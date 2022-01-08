@@ -4,7 +4,6 @@
 
 /// Unreal includes
 #include "Components/CapsuleComponent.h"
-#include "BehaviorTree/BlackboardComponent.h"
 #include "BrainComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Perception/PawnSensingComponent.h"
@@ -12,6 +11,7 @@
 /// Spells game includes
 #include "AI/SAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SAttributesComponent.h"
 
 namespace
@@ -25,6 +25,7 @@ ASAICharacter::ASAICharacter()
 	PrimaryActorTick.bCanEverTick = false;
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	AttributesComponent = CreateDefaultSubobject<USAttributesComponent>(TEXT("AttributesComponent"));
+	ActionsComponent = CreateDefaultSubobject<USActionsComponent>("ActionsComponent");
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
