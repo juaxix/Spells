@@ -2,12 +2,15 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
-#include "Gameplay/SAction.h"
+
+// Spells includes
+#include "Gameplay/Actions/SAction.h"
+
 #include "SMagicProjectileAttack_Action.generated.h"
 
 class ASMagicProjectile;
-
 
 UCLASS()
 class SPELLS_API USMagicProjectileAttack_Action : public USAction
@@ -17,7 +20,7 @@ class SPELLS_API USMagicProjectileAttack_Action : public USAction
 public:
 	USMagicProjectileAttack_Action()
 		: bIsRepeatedAttack(false)
-		, bRepeatedAction(false)
+		, bRepeatingAction(false)
 	{
 	}
 
@@ -26,7 +29,7 @@ public:
 	virtual void StopAction_Implementation(AActor* Instigator) override
 	{
 		Super::StopAction_Implementation(Instigator);
-		bRepeatedAction = false;
+		bRepeatingAction = false;
 	}
 
 	virtual void ReceiveAnimationNotif_Implementation() override;
@@ -51,10 +54,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Debug")
 	bool bDebugMode = false;
+
 private:
-
-	uint8 bRepeatedAction:1;
-
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* SkeletalSocket = nullptr;
+
+	uint8 bRepeatingAction:1;
 };

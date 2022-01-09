@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Gameplay/SInteractableInterface.h"
+
 #include "SItemBase.generated.h"
 
 UCLASS()

@@ -45,6 +45,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
 	float ProjectileDamage = 10.0f;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
+	TArray<TSubclassOf<class USActionEffect>> ProjectileActionEffects;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
+	bool bOverrideProjectileEffects = true;
+
 protected:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* MuzzleSocket = nullptr;

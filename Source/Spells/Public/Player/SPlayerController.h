@@ -7,7 +7,7 @@
 #include "SPlayerController.generated.h"
 
 /**
- * 
+ * Base class for the Spells Game Player Controller
  */
 UCLASS()
 class SPELLS_API ASPlayerController : public APlayerController

@@ -8,7 +8,7 @@
 // Spells game includes
 #include "AI/SAICharacter.h"
 #include "AI/SAIController.h"
-#include "Attacks/SMagicProjectile.h"
+#include "Gameplay/Attacks/SMagicProjectile.h"
 #include "Gameplay/SAttributesComponent.h"
 
 EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -36,6 +36,10 @@ EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent
 							if (ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(NewProjectile))
 							{
 								MagicProjectile->SetProjectileDamage(AICharacter->ProjectileDamage);
+								if (AICharacter->bOverrideProjectileEffects)
+								{
+									MagicProjectile->SetActionEffectClasses(AICharacter->ProjectileActionEffects, false);
+								}
 							}
 
 							return EBTNodeResult::Succeeded;

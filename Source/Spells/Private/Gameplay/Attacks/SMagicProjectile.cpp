@@ -1,6 +1,6 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-#include "Attacks/SMagicProjectile.h"
+#include "Gameplay/Attacks/SMagicProjectile.h"
 
 // Unreal includes
 #include "Components/SphereComponent.h"
@@ -10,6 +10,7 @@
 // Spells includes
 #include "Gameplay/SGameplayBlueprintFunctions.h"
 #include "Gameplay/SActionsComponent.h"
+#include "Gameplay/Actions/SActionEffect.h"
 #include "Player/SCharacter.h"
 
 ASMagicProjectile::ASMagicProjectile()
@@ -37,21 +38,44 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 	APawn* ThisInstigator = GetInstigator();
 	if (IsValid(OtherActor) && OtherActor != ThisInstigator )
 	{
-		if (const USActionsComponent* ActionsComponent = Cast<USActionsComponent>(OtherActor->GetComponentByClass(USActionsComponent::StaticClass())))
+		USActionsComponent* ActionsComponent = Cast<USActionsComponent>(OtherActor->GetComponentByClass(USActionsComponent::StaticClass()));
+		if (IsValid(ActionsComponent) && ActionsComponent->ActiveGameplayTags.HasTag(CounterSpellTag))
 		{
-			if (ActionsComponent->ActiveGameplayTags.HasTag(CounterSpellTag))
-			{
-				ProjectileMovementComponent->Velocity = -ProjectileMovementComponent->Velocity/2.0f; // this also inverts the rotation
-				SetInstigator(Cast<APawn>(OtherActor));
+			ProjectileMovementComponent->Velocity = -ProjectileMovementComponent->Velocity/2.0f; // this also inverts the rotation
+			SetInstigator(Cast<APawn>(OtherActor));
+			SetActionEffectClasses(ActionsComponent->GetCounterSpellActionEffectClasses(), true);
 
-				return;
-			}
+			return;
 		}
 
 		if (USGameplayBlueprintFunctions::ApplyDamage(ThisInstigator, OtherActor, Damage, SweepResult))
 		{
 			OnProjectileStopped(SweepResult);
+			if (ActionEffectClasses.Num() > 0 && IsValid(ActionsComponent))
+			{
+				for (TSubclassOf<USActionEffect> ActionEffect : ActionEffectClasses)
+				{
+					ActionsComponent->AddAction(ThisInstigator, ActionEffect);
+				}
+			}
 		}
+	}
+}
+
+void ASMagicProjectile::RemoveActionEffectClass(const TSubclassOf<USActionEffect>& ActionEffectClass)
+{
+	ActionEffectClasses.Remove(ActionEffectClass);
+}
+
+void ASMagicProjectile::SetActionEffectClasses(const TArray<TSubclassOf<USActionEffect>>& InActionEffectClasses, bool bAppend)
+{
+	if (bAppend)
+	{
+		ActionEffectClasses.Append(InActionEffectClasses);
+	}
+	else
+	{
+		ActionEffectClasses = InActionEffectClasses;
 	}
 }
 

@@ -3,9 +3,8 @@
 #include "Gameplay/SActionsComponent.h"
 
 // Spells game includes
-#include "Gameplay/SAction.h"
+#include "Gameplay/Actions/SAction.h"
 
-#pragma optimize("", off)
 void USActionsComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -15,24 +14,35 @@ void USActionsComponent::BeginPlay()
 	{
 		for (const TSubclassOf<USAction>& SubAction : DefaultActions)
 		{
-			AddAction(SubAction);
+			AddAction(GetOwner(), SubAction);
 		}
 	}
 }
-#pragma optimize("", on)
 
-void USActionsComponent::AddAction(TSubclassOf<USAction> ActionClass)
+void USActionsComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass)
 {
 	if (!ensure(ActionClass))
 	{
 		return;
 	}
 
-	USAction* NewAction = NewObject<USAction>(this, ActionClass);
+	USAction* NewAction = NewObject<USAction>(this, ActionClass, FName(FString::Printf(TEXT("%s_%d"), *ActionClass->GetName(), Actions.Num())));
 	if (ensure(NewAction))
 	{
 		Actions.Add(NewAction);
+		
+		if (NewAction->IsAutoStart() && ensureAlwaysMsgf(
+			NewAction->CanStart(Instigator), TEXT("Action %s can't be auto-started by Instigator"), *GetNameSafe(NewAction)))
+		{
+			NewAction->StartAction(Instigator);
+		}
 	}
+}
+
+void USActionsComponent::RemoveAction(USAction* Action)
+{
+	ensureAlwaysMsgf(Action && !Action->IsActive(), TEXT("Action must be != nullptr and not active to be removed"));
+	Actions.Remove(Action);
 }
 
 bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& ActionName)

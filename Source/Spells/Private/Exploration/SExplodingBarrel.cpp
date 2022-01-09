@@ -1,9 +1,13 @@
 // Spells - xixgames - juaxix - 2021/2022
 
 #include "Exploration/SExplodingBarrel.h"
+
+// Unreal includes
 #include "DrawDebugHelpers.h"
-#include "Attacks/SMagicProjectile.h"
 #include "PhysicsEngine/RadialForceComponent.h"
+
+// Spells includes
+#include "Gameplay/Attacks/SMagicProjectile.h"
 
 ASExplodingBarrel::ASExplodingBarrel()
 {

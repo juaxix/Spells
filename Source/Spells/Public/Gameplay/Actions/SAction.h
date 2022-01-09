@@ -1,9 +1,11 @@
 // Spells - xixgames - juaxix - 2021/2022
 
 #pragma once
-#include "SActionsComponent.h"
+#include "Gameplay/SActionsComponent.h"
 
 class USActionsComponent;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FSOnActionPostLoad, AActor*);
 
 // Engine includes
 #include "CoreMinimal.h"
@@ -19,6 +21,8 @@ class SPELLS_API USAction : public UObject
 	GENERATED_BODY()
 
 public:
+	USAction() : bIsActive(false) , bAutoStart(false) { }
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StartAction(AActor* Instigator);
 
@@ -42,6 +46,9 @@ public:
 	UFUNCTION(BlueprintPure, Category  = "Spells|Actions")
 	bool IsActive() const { return bIsActive; }
 
+	UFUNCTION(BlueprintPure, Category  = "Spells|Actions")
+	bool IsAutoStart() const { return bAutoStart; }
+
 	virtual UWorld* GetWorld() const override
 	{
 		if (UActorComponent* ActorComponent = Cast<UActorComponent>(GetOuter()))
@@ -62,5 +69,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions")
 	FName ActionName;
 
-	bool bIsActive = false;
+protected:
+	UPROPERTY(VisibleInstanceOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
+	uint8 bIsActive:1;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
+	uint8 bAutoStart:1;
 };

@@ -1,12 +1,13 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-#include "Gameplay/SAction.h"
+#include "Gameplay/Actions/SAction.h"
 
 // Spells includes
 #include "Gameplay/SActionsComponent.h"
 
 void USAction::StartAction_Implementation(AActor* Instigator)
 {
+	ensureAlwaysMsgf(!bIsActive, TEXT("An action must be inactive to be able to start it"));
 	GetOwningComponent()->ActiveGameplayTags.AppendTags(GrantTags);
 	bIsActive = true;
 }

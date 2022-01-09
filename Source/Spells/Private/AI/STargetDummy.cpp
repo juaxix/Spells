@@ -2,7 +2,7 @@
 #include "AI/STargetDummy.h"
 
 // Unreal includes
-#include "Components\StaticMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 // Spells includes
 #include "Gameplay/SAttributesComponent.h"

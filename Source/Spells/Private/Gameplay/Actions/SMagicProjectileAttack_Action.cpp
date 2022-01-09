@@ -1,6 +1,6 @@
 // Spells - xixgames - juaxix - 2021/2022
 
-#include "Attacks/SMagicProjectileAttack_Action.h"
+#include "Gameplay/Actions/SMagicProjectileAttack_Action.h"
 
 // Unreal includes
 #include "DrawDebugHelpers.h"
@@ -8,7 +8,7 @@
 #include "GameFramework/Character.h"
 
 // Spells includes
-#include "Attacks/SMagicProjectile.h"
+#include "Gameplay/Attacks/SMagicProjectile.h"
 
 namespace
 {
@@ -26,7 +26,7 @@ void USMagicProjectileAttack_Action::StartAction_Implementation(AActor* Instigat
 
 		if (bIsRepeatedAttack)
 		{
-			bRepeatedAction = true;
+			bRepeatingAction = true;
 		}
 
 		Character->PlayAnimMontage(AnimMontage);
@@ -39,7 +39,7 @@ void USMagicProjectileAttack_Action::ReceiveAnimationNotif_Implementation()
 	DoMagicalAttack();
 	if (bIsActive)
 	{
-		if (bRepeatedAction)
+		if (bRepeatingAction)
 		{
 			Character->PlayAnimMontage(AnimMontage);
 		}

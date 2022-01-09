@@ -9,6 +9,7 @@
 
 #include "SMagicProjectile.generated.h"
 
+class USActionEffect;
 class UProjectileMovementComponent;
 class USphereComponent;
 
@@ -41,21 +42,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spells|Projectile")
 	void SetProjectileDamage(float NewDamage) { Damage = NewDamage; }
 
+	UFUNCTION(BlueprintCallable, Category = "Spells|Action Effects")
+	void RemoveActionEffectClass(const TSubclassOf<USActionEffect>& ActionEffectClass);
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Action Effects")
+	void SetActionEffectClasses(const TArray<TSubclassOf<USActionEffect>>& InActionEffectClasses, bool bAppend = true);
+
 protected:
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Projectile")
 	USphereComponent* SphereComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Projectile")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Projectile")
 	UProjectileMovementComponent* ProjectileMovementComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "FX")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|FX")
 	UParticleSystemComponent* EffectComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, Category = "Spells|Attack", meta = (Tooltip = "Action Effect list to apply on hit to the target"))
+	TArray<TSubclassOf<USActionEffect>> ActionEffectClasses;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Damage", meta = (AllowPrivateAccess = true))
 	float Damage = 20.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Damage", meta = (AllowPrivateAccess = true))
 	FGameplayTag CounterSpellTag;
 };

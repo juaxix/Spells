@@ -7,7 +7,7 @@
 #include "SBTTaskNode_RangeAttack.generated.h"
 
 /**
- * 
+ * Behavior Tree Task node to perform a Range attack using a projectile class
  */
 UCLASS()
 class SPELLS_API USBTTaskNode_RangeAttack : public UBTTaskNode
