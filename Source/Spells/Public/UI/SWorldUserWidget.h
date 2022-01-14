@@ -20,7 +20,7 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Target")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Spells|Target")
 	AActor* AttachedActor = nullptr;
 
 protected:

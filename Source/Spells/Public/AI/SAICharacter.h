@@ -42,31 +42,31 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Spells|Player|Actions") FORCEINLINE
 	USActionsComponent* GetActionsComponent() const { return ActionsComponent; }
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spells|Projectile")
 	float ProjectileDamage = 10.0f;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spells|Projectile")
 	TArray<TSubclassOf<class USActionEffect>> ProjectileActionEffects;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Projectile")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spells|Projectile")
 	bool bOverrideProjectileEffects = true;
 
 protected:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* MuzzleSocket = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Components")
 	UPawnSensingComponent* PawnSensingComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Components")
 	USAttributesComponent* AttributesComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Components")
 	USActionsComponent* ActionsComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (ClampMin=1.0f, ClampMax=100.0f, UIMin=1.0f, UIMax=100.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|AI", meta = (ClampMin=1.0f, ClampMax=100.0f, UIMin=1.0f, UIMax=100.0f))
 	float DestroyAfterKillSeconds = 9.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Debug", meta = (AllowPrivateAccess = true))
 	uint8 bDebug:1;
 };

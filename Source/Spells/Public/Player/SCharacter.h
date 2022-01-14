@@ -122,31 +122,31 @@ public:
 	}
 
 public:
-	UPROPERTY(VisibleAnywhere, Category = "Player")
+	UPROPERTY(VisibleAnywhere, Category = "Spells|Player")
 	UCameraComponent* CameraComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Player")
 	USpringArmComponent* SpringArmComponent = nullptr;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Interaction")
 	USCharacterInteractionComponent* CharacterInteractionComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Attributes")
 	USAttributesComponent* AttributesComponent = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actions")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Actions")
 	USActionsComponent* ActionsComponent = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = "Setup")
+	UPROPERTY(EditAnywhere, Category = "Spells|Setup")
 	uint8 bDebugMode:1;
 
-	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "PFX to spawn when casting a spell"))
 	UParticleSystem* MuzzleParticleSystem = nullptr;
 
-	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake to perform on receiving an attack"))
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake to perform on receiving an attack"))
 	TSubclassOf<class UCameraShakeBase> CameraShake;
 
-	UPROPERTY(Category = "Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
 	int32 CameraShakeScale = 10;
 
 	const FName MagicMissileActionName = TEXT("MagicMissile");

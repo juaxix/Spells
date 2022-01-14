@@ -32,7 +32,7 @@ public:
 	bool SetCurrentTargetLocation(const FVector& InLocation);
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|AI")
 	UBehaviorTree* DefaultBehaviorTree = nullptr;
 
 	uint8 MoveToLocationBBKeyID = 0;

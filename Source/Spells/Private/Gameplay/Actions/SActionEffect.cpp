@@ -31,18 +31,18 @@ void USActionEffect::StartAction_Implementation(AActor* Instigator)
 
 void USActionEffect::StopAction_Implementation(AActor* Instigator)
 {
+	if (!bIsActive)
+	{
+		return;
+	}
+
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	// check for next period hit time for a last call (work around tags and so on)
 	if (TimerManager.GetTimerRemaining(PeriodHandle) < KINDA_SMALL_NUMBER)
 	{
 		OnApplyPeriodicEffect_Implementation(Instigator);
 	}
-
-	if (!bIsActive)
-	{
-		return;
-	}
-
+	
 	Super::StopAction_Implementation(Instigator);
 
 	// stop timers

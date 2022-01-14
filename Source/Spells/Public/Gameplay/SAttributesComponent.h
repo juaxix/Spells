@@ -46,13 +46,13 @@ public:
 	UFUNCTION(Exec, BlueprintCallable, BlueprintPure = false, Category = "Spells|Health")
 	void Kill(AActor* KillerActor = nullptr) { ApplyHealthChange(-MaxHealth, KillerActor, FHitResult()); }
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Health")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Spells|Health")
 	FSOnHealthAttributeChanged OnHealthAttributeChanged;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float Health = 100.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float MaxHealth = 100.0f;
 };

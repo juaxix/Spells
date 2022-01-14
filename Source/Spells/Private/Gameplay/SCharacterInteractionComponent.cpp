@@ -2,16 +2,20 @@
 
 #include "Gameplay/SCharacterInteractionComponent.h"
 
+// Unreal includes
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
-#include "Gameplay/SInteractableInterface.h"
 
+// Spells includes
+#include "Gameplay/SInteractableInterface.h"
+#include "UI/SWorldUserWidget.h"
 
 USCharacterInteractionComponent::USCharacterInteractionComponent()
 	: bDebugInteraction(false)
 	, bCheckForWalls(false)
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickInterval = 0.01f;
 	FCollisionObjectQueryParams CollisionObjectQueryParams;
 	CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 	CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
@@ -19,6 +23,21 @@ USCharacterInteractionComponent::USCharacterInteractionComponent()
 }
 
 void USCharacterInteractionComponent::PrimaryAction()
+{
+	if (IsValid(TargetActor))
+	{
+		ISInteractableInterface::Execute_Interact(TargetActor, Cast<ACharacter>(GetOwner()));
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Emerald, TEXT("Nothing to interact with"));
+		}
+	}
+}
+
+void USCharacterInteractionComponent::FindBestInteractable()
 {
 	if (ACharacter* MyOwner = Cast<ACharacter>(GetOwner()))
 	{
@@ -31,9 +50,10 @@ void USCharacterInteractionComponent::PrimaryAction()
 		FCollisionShape CollisionShape;
 		CollisionShape.SetSphere(InteractionRadius);
 		UWorld* World = GetWorld();
+		AActor* NewTargetActor = nullptr;
 		if (World->SweepMultiByObjectType(HitResults, StartLocation, EndLocation, FQuat::Identity, CollisionObjectQueryParams_StaticDynamic, CollisionShape, CollisionQueryParams))
 		{
-			for (auto& HitResult: HitResults)
+			for (FHitResult& HitResult: HitResults)
 			{
 				if (AActor* HitActor = HitResult.GetActor())
 				{
@@ -42,8 +62,8 @@ void USCharacterInteractionComponent::PrimaryAction()
 						 World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitActor->GetActorLocation(), CollisionObjectQueryParams_Static) &&
 						 (WallHitResult.GetActor() == HitActor || WallHitResult.GetActor() == nullptr)))
 					{
-						ISInteractableInterface::Execute_Interact(HitActor, MyOwner);
 						EndLocation = bCheckForWalls && WallHitResult.bBlockingHit ? WallHitResult.ImpactPoint : HitResult.ImpactPoint;
+						NewTargetActor = HitActor;
 						break;
 					}
 					
@@ -57,12 +77,47 @@ void USCharacterInteractionComponent::PrimaryAction()
 			}
 		}
 
+		if (NewTargetActor != TargetActor)
+		{
+			OnFocusing(NewTargetActor);
+		}
+
+#if WITH_EDITORONLY_DATA
 		if (bDebugInteraction)
 		{
 			DrawDebugCylinder(GetWorld(), StartLocation, 
 				EndLocation, InteractionRadius, 12,  
-				bBlockingHit ? FColor::Green : FColor::Silver, 
-					false, 0.5f, 0, 2);
+				bBlockingHit || NewTargetActor? DebugColorActiveHit : DebugColorNoHit, 
+					false, 0.01f, 0, 3);
+		}
+#endif
+	}
+}
+
+void USCharacterInteractionComponent::OnFocusing(AActor* NewTargetActor)
+{
+	TargetActor = NewTargetActor;
+
+	if (IsValid(TargetActor))
+	{
+		if (!IsValid(InteractionUserWidget) && IsValid(InteractionWidgetClass))
+		{
+			InteractionUserWidget = CreateWidget<USWorldUserWidget>(GetOwner()->GetInstigatorController<APlayerController>(),
+									InteractionWidgetClass);
+		}
+
+		if (InteractionUserWidget && !InteractionUserWidget->IsInViewport())
+		{
+			InteractionUserWidget->AddToViewport();
 		}
 	}
+	else
+	{
+		if (IsValid(InteractionUserWidget))
+		{
+			InteractionUserWidget->RemoveFromParent();
+		}
+	}
+
+	InteractionUserWidget->AttachedActor = TargetActor;
 }

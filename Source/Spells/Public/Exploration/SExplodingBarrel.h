@@ -29,7 +29,7 @@ protected:
 	void OnBarrelHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Explosion")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Explosion")
 	URadialForceComponent* RadialForceComponent = nullptr;
 
 };
