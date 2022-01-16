@@ -40,17 +40,10 @@ public:
 	float InteractionRadius = 30.0f;
 
 protected:
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
-	uint8 bDebugInteraction:1;
-
-	FColor DebugColorActiveHit = FColor(0,255,0, 128);
-	FColor DebugColorNoHit = FColor(189, 195, 199, 128);
-#endif
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
 	uint8 bCheckForWalls:1;
 
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<USWorldUserWidget> InteractionWidgetClass;
 
@@ -59,6 +52,14 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Interaction", meta = (AllowPrivateAcces = "true"))
 	AActor* TargetActor = nullptr;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
+	uint8 bDebugInteraction:1;
+
+	FColor DebugColorActiveHit = FColor(0,255,0, 128);
+	FColor DebugColorNoHit = FColor(189, 195, 199, 128);
+#endif
 
 	FCollisionObjectQueryParams CollisionObjectQueryParams_StaticDynamic, CollisionObjectQueryParams_Static;
 };

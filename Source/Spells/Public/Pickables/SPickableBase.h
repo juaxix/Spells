@@ -8,6 +8,8 @@
 
 #include "SPickableBase.generated.h"
 
+class USActionEffect;
+
 UCLASS(BlueprintType, Blueprintable)
 class SPELLS_API ASPickableBase : public AActor, public ISPickableInterface
 {
@@ -47,4 +49,10 @@ protected:
 
 	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 CreditsGranted = 0;
+
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", Tooltip = "List of effects to be added to the character picking this item"))
+	TArray<TSubclassOf<USActionEffect>> ActionEffectsGranted;
+
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", Tooltip = "List of effects to be removed from the character picking this item"))
+	TArray<TSubclassOf<USActionEffect>> ActionEffectsRemoved;
 };

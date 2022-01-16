@@ -14,6 +14,17 @@ class UPawnSensingComponent;
 
 class USActionsComponent;
 class USAttributesComponent;
+class USWorldUserWidget;
+
+UENUM(BlueprintType)
+enum class ESAIAggroLevels : uint8
+{
+	IDLE,
+	SPOTTED,
+	ATTACKING
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSOnEnemyAggroChanged, AActor*, InstigatorActor, ESAIAggroLevels, AggroLevel);
 
 UCLASS()
 class SPELLS_API ASAICharacter : public ACharacter
@@ -23,6 +34,25 @@ class SPELLS_API ASAICharacter : public ACharacter
 public:
 	ASAICharacter();
 	
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Attack") FORCEINLINE
+	FVector GetMuzzleLocation() const { return MuzzleSocket->GetSocketLocation(GetMesh()); }
+
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Attributes") FORCEINLINE
+	USAttributesComponent* GetAttributesComponent() const { return AttributesComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Actions") FORCEINLINE
+	USActionsComponent* GetActionsComponent() const { return ActionsComponent; }
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Aggro")
+	void ApplyAggroLevelChange(AActor* InstigatorActor, ESAIAggroLevels NewAggroLevel)
+	{
+		if (AggroLevel != NewAggroLevel)
+		{
+			AggroLevel = NewAggroLevel;
+			OnEnemyAggroChanged.Broadcast(InstigatorActor, AggroLevel);
+		}
+	}
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -33,15 +63,6 @@ protected:
 	void OnHealthChanged(AActor* AttackerInstigatorActor, USAttributesComponent* AttributeComponent, float NewHealth, float Delta, const FHitResult& Hit);
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Spells|AI|Attack") FORCEINLINE
-	FVector GetMuzzleLocation() const { return MuzzleSocket->GetSocketLocation(GetMesh()); }
-
-	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
-	USAttributesComponent* GetAttributesComponent() const { return AttributesComponent; }
-
-	UFUNCTION(BlueprintPure, Category = "Spells|Player|Actions") FORCEINLINE
-	USActionsComponent* GetActionsComponent() const { return ActionsComponent; }
-
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spells|Projectile")
 	float ProjectileDamage = 10.0f;
 
@@ -67,6 +88,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|AI", meta = (ClampMin=1.0f, ClampMax=100.0f, UIMin=1.0f, UIMax=100.0f))
 	float DestroyAfterKillSeconds = 9.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Debug", meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<USWorldUserWidget> SpottedWidgetClass;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|UI", meta = (AllowPrivateAccess = "true"))
+	USWorldUserWidget* SpottedWidget = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Spells|Aggro")
+	FSOnEnemyAggroChanged OnEnemyAggroChanged;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Aggro")
+	ESAIAggroLevels AggroLevel = ESAIAggroLevels::IDLE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Debug", meta = (AllowPrivateAccess = "true"))
 	uint8 bDebug:1;
 };

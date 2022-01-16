@@ -42,6 +42,8 @@ EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent
 								}
 							}
 
+							AICharacter->ApplyAggroLevelChange(TargetActor, ESAIAggroLevels::ATTACKING);
+
 							return EBTNodeResult::Succeeded;
 						}
 					}

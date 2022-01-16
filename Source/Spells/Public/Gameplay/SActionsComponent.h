@@ -29,20 +29,14 @@ public:
 	
 	virtual void BeginPlay() override;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
-	{
-		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-		if (GEngine)
-		{
-			ACharacter* Char = Cast<ACharacter>(GetOwner());
-			if (Char && Char->IsPlayerControlled())
-			{
-				FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, DebugMsg);
-			}
-		}
-	}
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
+	bool HasAction(TSubclassOf<USAction> ActionClass) const;
+
+	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
+	USAction* GetAction(TSubclassOf<USAction> ActionClass);
+
 	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
 	void AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass);
 

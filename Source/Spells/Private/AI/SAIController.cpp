@@ -44,6 +44,19 @@ bool ASAIController::SetCurrentTargetActor(AActor* InActor)
 	return false;
 }
 
+AActor* ASAIController::GetCurrentTargetActor() const
+{
+	if (const UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+	{
+		if (MoveToActorBBKeyID != FBlackboard::InvalidKey)
+		{
+			return Cast<AActor>(BlackboardComponent->GetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID));
+		}
+	}
+
+	return nullptr;
+}
+
 bool ASAIController::SetCurrentTargetLocation(const FVector& InLocation)
 {
 	if (UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
@@ -55,4 +68,17 @@ bool ASAIController::SetCurrentTargetLocation(const FVector& InLocation)
 	}
 
 	return false;
+}
+
+FVector ASAIController::GetCurrentTargetLocation() const
+{
+	if (const UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+	{
+		if (MoveToLocationBBKeyID != FBlackboard::InvalidKey)
+		{
+			return BlackboardComponent->GetValue<UBlackboardKeyType_Vector>(MoveToLocationBBKeyID);
+		}
+	}
+
+	return FVector::ZeroVector;
 }

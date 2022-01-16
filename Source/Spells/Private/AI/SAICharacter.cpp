@@ -2,17 +2,18 @@
 
 #include "AI/SAICharacter.h"
 
-/// Unreal includes
+// Unreal includes
 #include "Components/CapsuleComponent.h"
 #include "BrainComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Perception/PawnSensingComponent.h"
 
-/// Spells game includes
+// Spells game includes
 #include "AI/SAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SAttributesComponent.h"
+#include "UI/SWorldUserWidget.h"
 
 namespace
 {
@@ -35,6 +36,8 @@ void ASAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ApplyAggroLevelChange(nullptr, ESAIAggroLevels::IDLE);
+
 	// cache muzzle
 	MuzzleSocket = GetMesh()->GetSocketByName(SMUZZLE_NAME);
 
@@ -47,7 +50,24 @@ void ASAICharacter::OnPawnInSight(APawn* InPawn)
 {
 	if (ASAIController* AIController = GetController<ASAIController>())
 	{
+		if (AIController->GetCurrentTargetActor() == InPawn)
+		{
+			return;
+		}
+
 		AIController->SetCurrentTargetActor(InPawn);
+		if (!SpottedWidget)
+		{
+			SpottedWidget = CreateWidget<USWorldUserWidget>(GetWorld(), SpottedWidgetClass);
+			if (SpottedWidget)
+			{
+				SpottedWidget->AttachedActor = this;
+				SpottedWidget->AddToViewport(10); // if ZOrder > 0 place this widget over others to avoid be behind health
+			}
+		}
+
+		ApplyAggroLevelChange(InPawn, ESAIAggroLevels::SPOTTED);
+
 		if (bDebug)
 		{
 			DrawDebugString(GetWorld(), GetActorLocation(), FString::Printf(TEXT("PLAYER SPOTTED: %s"), *InPawn->GetName()), nullptr, FColor::Cyan, 4.0f, true);
@@ -64,6 +84,11 @@ void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, class USAtt
 			if (const ASAIController* AIController = GetController<ASAIController>())
 			{
 				AIController->GetBrainComponent()->StopLogic("Killed");
+			}
+
+			if (IsValid(SpottedWidget))
+			{
+				SpottedWidget->RemoveFromParent();
 			}
 
 			USkeletalMeshComponent* SkeletalMeshComponent = GetMesh();

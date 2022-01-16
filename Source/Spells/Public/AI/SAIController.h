@@ -28,8 +28,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
 	bool SetCurrentTargetActor(AActor* InActor);
 
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Target")
+	AActor* GetCurrentTargetActor() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
 	bool SetCurrentTargetLocation(const FVector& InLocation);
+
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Target")
+	FVector GetCurrentTargetLocation() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|AI")

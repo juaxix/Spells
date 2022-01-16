@@ -114,6 +114,12 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 				{
 					PlayerController->ClientStartCameraShake(CameraShake, CameraShakeScale);
 				}
+
+				if (InstigatorActor != this) // dont rage myself
+				{
+					// Add Rage from a fraction of the incoming damage
+					AttributesComponent->ApplyRageChange(FMath::Abs(Delta) * DamageReceivedToRageFraction, this, Hit);
+				}
 			}
 		}
 	}
@@ -141,7 +147,8 @@ void ASCharacter::Tick(float DeltaSeconds)
 void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (!HasAnyFlags(RF_DefaultSubObject|RF_ClassDefaultObject|RF_Transient) &&
+	
+	if (!HasAnyFlags(RF_DefaultSubObject|RF_ClassDefaultObject) &&
 		!AttributesComponent->OnHealthAttributeChanged.IsAlreadyBound(this, &ASCharacter::OnHealthChanged))
 	{
 		AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);

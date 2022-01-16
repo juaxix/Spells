@@ -23,6 +23,8 @@ EBTNodeResult::Type USBTTaskNode_RegenerateAttribute::ExecuteTask(UBehaviorTreeC
 						FHitResult{AICharacter->GetMuzzleLocation(), AICharacter->GetActorLocation()}
 					);
 
+					AICharacter->ApplyAggroLevelChange(AICharacter, ESAIAggroLevels::IDLE);
+
 					break;
 			}
 

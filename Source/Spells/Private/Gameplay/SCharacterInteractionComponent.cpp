@@ -11,8 +11,10 @@
 #include "UI/SWorldUserWidget.h"
 
 USCharacterInteractionComponent::USCharacterInteractionComponent()
-	: bDebugInteraction(false)
-	, bCheckForWalls(false)
+	: bCheckForWalls(false)
+#if !UE_BUILD_SHIPPING
+	, bDebugInteraction(false)
+#endif
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickInterval = 0.01f;

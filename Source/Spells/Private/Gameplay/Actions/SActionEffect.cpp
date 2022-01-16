@@ -57,5 +57,4 @@ void USActionEffect::StopAction_Implementation(AActor* Instigator)
 
 void USActionEffect::OnApplyPeriodicEffect_Implementation(AActor* Instigator)
 {
-
 }

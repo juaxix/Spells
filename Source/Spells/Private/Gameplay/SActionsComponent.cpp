@@ -19,6 +19,45 @@ void USActionsComponent::BeginPlay()
 	}
 }
 
+void USActionsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (GEngine)
+	{
+		ACharacter* Char = Cast<ACharacter>(GetOwner());
+		if (Char && Char->IsPlayerControlled())
+		{
+			const FString DebugMsg = GetNameSafe(GetOwner()) + " : " + ActiveGameplayTags.ToStringSimple();
+			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, DebugMsg);
+		}
+	}
+}
+
+bool USActionsComponent::HasAction(TSubclassOf<USAction> ActionClass) const
+{
+	return Actions.ContainsByPredicate([ActionClass](USAction* Action)->bool { return Action && Action->IsA(ActionClass); });
+}
+
+USAction* USActionsComponent::GetAction(TSubclassOf<USAction> ActionClass) 
+{
+	if (!ensure(ActionClass))
+	{
+		return nullptr;
+	}
+	
+	TArray<USAction*>::ElementType* Action = Actions.FindByPredicate([ActionClass](USAction* Action)->bool
+	{
+		return Action && Action->IsA(ActionClass);
+	});
+
+	if (!Action)
+	{
+		return nullptr;
+	}
+
+	return *Action;
+}
+
 void USActionsComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass)
 {
 	if (!ensure(ActionClass))

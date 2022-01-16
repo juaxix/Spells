@@ -3,7 +3,7 @@
 
 // Spells includes
 #include "Gameplay/SpellsGameModeBase.h"
-#include "Player/SPlayerState.h"
+//#include "Player/SPlayerState.h"
 
 // cheats : not available for shipping builds
 static TAutoConsoleVariable<float> Spells_CVarGlobalDamageMultipler(TEXT("spells.GlobalDamageMultipler"), true, TEXT("Value to Multiply all damages in the game"), ECVF_Cheat);
@@ -49,3 +49,44 @@ bool USAttributesComponent::ApplyHealthChange(float Delta, AActor* InstigatorAct
 	return ActualDelta != 0.0f;
 }
 
+void USAttributesComponent::ApplyManaChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
+{
+	if (!GetOwner()->CanBeDamaged())
+	{
+		return;
+	}
+
+	const float OldMana = Mana;
+
+	Mana = FMath::Clamp(Mana + Delta, 0.0f, MaxMana);
+	const float ActualDelta = Mana - OldMana;
+
+	if (ActualDelta != 0.0f)
+	{
+		if (OnManaAttributeChanged.IsBound())
+		{
+			OnManaAttributeChanged.Broadcast(InstigatorActor, this, Mana, ActualDelta, Hit);
+		}
+	}
+}
+
+void USAttributesComponent::ApplyRageChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
+{
+	if (!GetOwner()->CanBeDamaged())
+	{
+		return;
+	}
+
+	const float OldRage = Rage;
+
+	Rage = FMath::Clamp(Rage + Delta, 0.0f, MaxRage);
+	const float ActualDelta = Rage - OldRage;
+
+	if (ActualDelta != 0.0f)
+	{
+		if (OnRageAttributeChanged.IsBound())
+		{
+			OnRageAttributeChanged.Broadcast(InstigatorActor, this, Rage, ActualDelta, Hit);
+		}
+	}
+}

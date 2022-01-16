@@ -149,6 +149,12 @@ public:
 	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Camera shake intensity"))
 	int32 CameraShakeScale = 10;
 
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Fraction of the damage done to this character converted into my Rage"))
+	float DamageReceivedToRageFraction = 0.23f;
+
+	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Fraction of the damage done to other actors converted into my Mana"))
+	float DamageDoneToManaFraction = 0.3f;
+
 	const FName MagicMissileActionName = TEXT("MagicMissile");
 	const FName TeleportActionName = TEXT("Teleport");
 	const FName BlackholeActionName = TEXT("Blackhole");
