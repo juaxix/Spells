@@ -103,7 +103,10 @@ void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, class USAtt
 		{
 			if (AttackerInstigatorActor != this)
 			{
-				GetController<ASAIController>()->SetCurrentTargetActor(AttackerInstigatorActor);
+				if (ASAIController* AIController = GetController<ASAIController>())
+				{
+					AIController->SetCurrentTargetActor(AttackerInstigatorActor);
+				}
 			}
 		}
 	}
