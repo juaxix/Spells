@@ -249,7 +249,6 @@ void ASpellsGameModeBase::LoadSaveGame()
 							Actor->Serialize(Ar);
 							ISInteractableInterface::Execute_OnRestoredStateFromSaveGame(Actor);
 						}
-						
 					}
 				}
 			}
