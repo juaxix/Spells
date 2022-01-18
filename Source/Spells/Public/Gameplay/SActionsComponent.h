@@ -6,7 +6,6 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
-#include "GameFramework/Character.h"
 
 #include "SActionsComponent.generated.h"
 

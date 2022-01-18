@@ -23,4 +23,8 @@ class SPELLS_API ISInteractableInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spells|Interaction")
 	void Interact(APawn* InstigatorPawn);
+
+	// Called after an actor state was restored from a SaveGame file
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Interaction")
+	void OnRestoredStateFromSaveGame();
 };

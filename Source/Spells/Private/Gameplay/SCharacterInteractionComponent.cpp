@@ -121,5 +121,8 @@ void USCharacterInteractionComponent::OnFocusing(AActor* NewTargetActor)
 		}
 	}
 
-	InteractionUserWidget->AttachedActor = TargetActor;
+	if (InteractionUserWidget)
+	{
+		InteractionUserWidget->AttachedActor = TargetActor;
+	}
 }

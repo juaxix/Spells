@@ -3,15 +3,22 @@
 #include "Gameplay/SpellsGameModeBase.h"
 
 // Unreal includes
+#include "EngineUtils.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 
 // Spells includes
 #include "AI/SAICharacter.h"
+#include "GameFramework/GameStateBase.h"
 #include "Gameplay/SAttributesComponent.h"
+#include "Gameplay/SInteractableInterface.h"
+#include "Gameplay/SSaveGame.h"
 #include "Pickables/SPickableBase.h"
 #include "Player/SCharacter.h"
 #include "Player/SPlayerState.h"
+
 
 // Cheats : not available in final builds (shipping)
 static TAutoConsoleVariable<bool> Spells_CVarSpawnBots(TEXT("spells.SpawnBots"), true, TEXT("Enable spawning of bots via timer"), ECVF_Cheat);
@@ -19,6 +26,13 @@ static TAutoConsoleVariable<bool> Spells_CVarSpawnBots(TEXT("spells.SpawnBots"),
 ASpellsGameModeBase::ASpellsGameModeBase()
 {
 	PlayerStateClass = ASPlayerState::StaticClass();
+}
+
+void ASpellsGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+
+	LoadSaveGame();
 }
 
 void ASpellsGameModeBase::StartPlay()
@@ -43,6 +57,16 @@ void ASpellsGameModeBase::StartPlay()
 			PickableSpotQueryInstance->GetOnQueryFinishedEvent().AddDynamic(this, &ASpellsGameModeBase::OnPickableSpawnQueryCompleted);
 		}
 		
+	}
+}
+
+void ASpellsGameModeBase::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	if (ASPlayerState* PS = NewPlayer->GetPlayerState<ASPlayerState>())
+	{
+		PS->LoadPlayerState(CurrentSaveGame);
 	}
 }
 
@@ -165,6 +189,79 @@ void ASpellsGameModeBase::OnActorKilled(AActor* Killed, AActor* Killer)
 		{
 			PlayerState->GrantCredits(CreditsGrantedPerKill);
 		}
+	}
+}
+
+void ASpellsGameModeBase::WriteSaveGame()
+{
+	// we use player states instead of an unique user ID in the case of Steam, EOS, PSN, GooglePlay and so on
+	for (APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		if (ASPlayerState* SPS = Cast<ASPlayerState>(PlayerState))
+		{
+			SPS->SavePlayerState(CurrentSaveGame);
+			break; // TODO : add multi-player support
+		}
+	}
+
+	CurrentSaveGame->SavedActors.Empty(CurrentSaveGame->SavedActors.Num());
+
+	// add our interactable actors to the savegame
+	for (FActorIterator ItActor(GetWorld()); ItActor; ++ItActor)
+	{
+		AActor* Actor = *ItActor;
+		if (IsValid(Actor) && Actor->Implements<USInteractableInterface>())
+		{
+			FSActorSaveData ActorData{Actor->GetName(), Actor->GetActorTransform()};
+			FMemoryWriter MemoryWriter(ActorData.ByteData);
+			FObjectAndNameAsStringProxyArchive Ar(MemoryWriter, true);
+			Ar.ArIsSaveGame = true; // Find only vars with the flag SaveGame (UPROPERTY)
+			Actor->Serialize(Ar);
+			CurrentSaveGame->SavedActors.Emplace(ActorData);
+		}
+	}
+
+	UGameplayStatics::SaveGameToSlot(CurrentSaveGame, SaveGameSlotName, 0);
+}
+
+void ASpellsGameModeBase::LoadSaveGame()
+{
+	if (UGameplayStatics::DoesSaveGameExist(SaveGameSlotName, 0))
+	{
+		if (USSaveGame* SaveGame = Cast<USSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveGameSlotName, 0)))
+		{
+			CurrentSaveGame = SaveGame;
+			for (FActorIterator ItActor(GetWorld()); ItActor; ++ItActor)
+			{
+				AActor* Actor = *ItActor;
+				if (IsValid(Actor) && Actor->Implements<USInteractableInterface>())
+				{
+					CurrentSaveGame->SavedActors.Emplace(FSActorSaveData{ Actor->GetName(), Actor->GetActorTransform() });
+					if (const FSActorSaveData* SavedActorIt = CurrentSaveGame->SavedActors.FindByPredicate(
+						[Actor](const FSActorSaveData& A)->bool{return A.ActorName.Equals(Actor->GetName());}))
+					{
+						Actor->SetActorTransform(SavedActorIt->Transform);
+						if (SavedActorIt->ByteData.Num() > 0)
+						{
+							FMemoryReader MemoryReader(SavedActorIt->ByteData);
+							FObjectAndNameAsStringProxyArchive Ar(MemoryReader, true);
+							Ar.ArIsSaveGame = true; // Find only vars with the flag SaveGame (UPROPERTY)
+							Actor->Serialize(Ar);
+							ISInteractableInterface::Execute_OnRestoredStateFromSaveGame(Actor);
+						}
+						
+					}
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load SaveGame %s"), *SaveGameSlotName);
+		}
+	}
+	else
+	{
+		CurrentSaveGame = Cast<USSaveGame>(UGameplayStatics::CreateSaveGameObject(USSaveGame::StaticClass()));
 	}
 }
 

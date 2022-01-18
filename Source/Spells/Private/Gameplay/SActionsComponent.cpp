@@ -2,6 +2,9 @@
 
 #include "Gameplay/SActionsComponent.h"
 
+// Unrea includes
+#include "GameFramework/Character.h"
+
 // Spells game includes
 #include "Gameplay/Actions/SAction.h"
 
@@ -35,7 +38,7 @@ void USActionsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 bool USActionsComponent::HasAction(TSubclassOf<USAction> ActionClass) const
 {
-	return Actions.ContainsByPredicate([ActionClass](USAction* Action)->bool { return Action && Action->IsA(ActionClass); });
+	return Actions.ContainsByPredicate([ActionClass](USAction* Action) -> bool { return Action && Action->IsA(ActionClass); });
 }
 
 USAction* USActionsComponent::GetAction(TSubclassOf<USAction> ActionClass) 
@@ -45,17 +48,12 @@ USAction* USActionsComponent::GetAction(TSubclassOf<USAction> ActionClass)
 		return nullptr;
 	}
 	
-	TArray<USAction*>::ElementType* Action = Actions.FindByPredicate([ActionClass](USAction* Action)->bool
+	if (USAction** Action = Actions.FindByPredicate([ActionClass](const USAction* A)->bool{return A && A->IsA(ActionClass);}))
 	{
-		return Action && Action->IsA(ActionClass);
-	});
-
-	if (!Action)
-	{
-		return nullptr;
+		return *Action;
 	}
 
-	return *Action;
+	return nullptr;
 }
 
 void USActionsComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass)
