@@ -8,14 +8,26 @@
 void USAction::StartAction_Implementation(AActor* Instigator)
 {
 	ensureAlwaysMsgf(!bIsActive, TEXT("An action must be inactive to be able to start it"));
-	GetOwningComponent()->ActiveGameplayTags.AppendTags(GrantTags);
+	
+	if (USActionsComponent* ActionsComponent = GetOwningComponent())
+	{
+		ActionsComponent->ActiveGameplayTags.AppendTags(GrantTags);
+		ActionsComponent->OnActionStarted.Broadcast(ActionsComponent, this);
+	}
+
 	bIsActive = true;
 }
 
 void USAction::StopAction_Implementation(AActor* Instigator)
 {
 	ensureAlwaysMsgf(bIsActive, TEXT("An action must be active to be able to stop it"));
-	GetOwningComponent()->ActiveGameplayTags.RemoveTags(GrantTags);
+
+	if (USActionsComponent* ActionsComponent = GetOwningComponent())
+	{
+		ActionsComponent->ActiveGameplayTags.RemoveTags(GrantTags);
+		ActionsComponent->OnActionStopped.Broadcast(ActionsComponent, this);
+	}
+
 	bIsActive = false;
 }
 

@@ -22,7 +22,7 @@ class SPELLS_API USAction : public UObject
 
 public:
 	USAction() : bIsActive(false) , bAutoStart(false) { }
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StartAction(AActor* Instigator);
 
@@ -69,6 +69,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions")
 	FName ActionName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|UI")
+	UTexture2D* Icon;
+	
 protected:
 	UPROPERTY(VisibleInstanceOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
 	uint8 bIsActive:1;

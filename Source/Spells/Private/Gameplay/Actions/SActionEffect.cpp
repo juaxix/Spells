@@ -27,6 +27,8 @@ void USActionEffect::StartAction_Implementation(AActor* Instigator)
 		PeriodDelegate.BindUFunction(this, PeriodicMethodName, Instigator);
 		TimerManager.SetTimer(PeriodHandle, PeriodDelegate, Period, true);
 	}
+
+	TimeStarted = GetWorld()->TimeSeconds;
 }
 
 void USActionEffect::StopAction_Implementation(AActor* Instigator)

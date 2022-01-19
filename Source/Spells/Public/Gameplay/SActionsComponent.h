@@ -9,8 +9,11 @@
 
 #include "SActionsComponent.generated.h"
 
+class USActionsComponent;
 class USActionEffect;
 class USAction;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSOnActionStateChanged, USActionsComponent*, InOwningComponent, USAction*, InAction);
 
 /**
  * Keep a list of actions
@@ -56,14 +59,20 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Tags")
 	FGameplayTagContainer ActiveGameplayTags;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly, Category = "Spells|Actions")
+	FSOnActionStateChanged OnActionStarted;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly, Category = "Spells|Actions")
+	FSOnActionStateChanged OnActionStopped;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = true, Tooltip = "Actions classes to be instanced on start"))
 	TArray<TSubclassOf<USAction>> DefaultActions;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|Actions", meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = true))
 	TArray<USAction*> Actions;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true, Tooltip = "Actions Effect classes to be append on counter attack"))
 	TArray<TSubclassOf<USActionEffect>> CounterSpellActionEffectClasses;
 };

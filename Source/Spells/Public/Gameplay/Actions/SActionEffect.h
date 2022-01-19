@@ -23,17 +23,23 @@ public:
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 
 	virtual void StopAction_Implementation(AActor* Instigator) override;
-	
+
+	UFUNCTION(BlueprintPure, Category  = "Spells|Action Effects")
+	float GetRemainingTime() const { return (TimeStarted + Duration) - GetWorld()->TimeSeconds; }
+
 protected:
-	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Action Effect")
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Action Effects")
 	void OnApplyPeriodicEffect(AActor* Instigator);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effect", meta = (AllowPrivateAccess = true))
-	float Duration;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
+	float Duration = 0.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effect", meta = (AllowPrivateAccess = true))
-	float Period;
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
+	float Period = 0.0f;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
+	float TimeStarted = 0.0f;
+
 	FTimerHandle DurationHandle;
 	FTimerHandle PeriodHandle;
 };
