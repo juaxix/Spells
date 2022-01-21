@@ -70,7 +70,7 @@ public:
 	FName ActionName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|UI")
-	UTexture2D* Icon;
+	TSoftObjectPtr<UTexture2D> Icon;
 	
 protected:
 	UPROPERTY(VisibleInstanceOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))

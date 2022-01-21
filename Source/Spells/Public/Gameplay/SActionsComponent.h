@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
 	USAction* GetAction(TSubclassOf<USAction> ActionClass);
 
+	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
+	const TArray<USAction*>& GetCurrentActions() const { return Actions; };
+
 	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
 	void AddAction(AActor* Instigator, TSubclassOf<USAction> ActionClass);
 

@@ -12,7 +12,7 @@
 
 USCharacterInteractionComponent::USCharacterInteractionComponent()
 	: bCheckForWalls(false)
-#if !UE_BUILD_SHIPPING
+#if WITH_EDITORONLY_DATA
 	, bDebugInteraction(false)
 #endif
 {

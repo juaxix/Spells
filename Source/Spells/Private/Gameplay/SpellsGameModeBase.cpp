@@ -11,6 +11,7 @@
 
 // Spells includes
 #include "AI/SAICharacter.h"
+#include "Data/SEnemyDataAsset.h"
 #include "GameFramework/GameStateBase.h"
 #include "Gameplay/SAttributesComponent.h"
 #include "Gameplay/SInteractableInterface.h"
@@ -21,7 +22,7 @@
 
 
 // Cheats : not available in final builds (shipping)
-static TAutoConsoleVariable<bool> Spells_CVarSpawnBots(TEXT("spells.SpawnBots"), true, TEXT("Enable spawning of bots via timer"), ECVF_Cheat);
+static TAutoConsoleVariable<bool> Spells_CVarSpawnEnemies(TEXT("spells.SpawnEnemies"), true, TEXT("Enable spawning of enemies via timer"), ECVF_Cheat);
 
 ASpellsGameModeBase::ASpellsGameModeBase()
 {
@@ -39,14 +40,14 @@ void ASpellsGameModeBase::StartPlay()
 {
 	Super::StartPlay();
 
-	if (TimerHandle_SpawnBots.IsValid())
+	if (TimerHandle_SpawnEnemies.IsValid())
 	{
-		TimerHandle_SpawnBots.Invalidate();
+		TimerHandle_SpawnEnemies.Invalidate();
 	}
 
-	if (IsValid(SpawnBotQuery))
+	if (IsValid(SpawnEnemyQuery))
 	{
-		GetWorldTimerManager().SetTimer(TimerHandle_SpawnBots, this, &ASpellsGameModeBase::SpawnBotTimerElapsed, SpawnBotTimerInterval, true);
+		GetWorldTimerManager().SetTimer(TimerHandle_SpawnEnemies, this, &ASpellsGameModeBase::SpawnEnemyTimerElapsed, SpawnEnemyTimerInterval, true);
 	}
 
 	if (SpawnPickableQuery && SpawnPickableClasses.Num() > 0)
@@ -70,40 +71,40 @@ void ASpellsGameModeBase::HandleStartingNewPlayer_Implementation(APlayerControll
 	}
 }
 
-bool ASpellsGameModeBase::CanSpawnBot() const
+bool ASpellsGameModeBase::CanSpawnEnemy() const
 {
-	if (!IsValid(SpawnBotInTimeCurve))
+	if (!IsValid(SpawnEnemyInTimeCurve))
 	{
 		return false;
 	}
-	const float MaxNumberOfBots = SpawnBotInTimeCurve->GetFloatValue(GetWorld()->TimeSeconds);
+	const float MaxNumberOfEnemies = SpawnEnemyInTimeCurve->GetFloatValue(GetWorld()->TimeSeconds);
 
-	if (SpawnedBots.Num() < MaxNumberOfBots)
+	if (SpawnedEnemies.Num() < MaxNumberOfEnemies)
 	{
 		return true;
 	}
 
 	int32 NumAlive = 0;
-	for (const ASAICharacter* Bot: SpawnedBots)
+	for (const ASAICharacter* Enemy: SpawnedEnemies)
 	{
-		if (IsValid(Bot) && Bot->GetAttributesComponent()->IsAlive())
+		if (IsValid(Enemy) && Enemy->GetAttributesComponent()->IsAlive())
 		{
 			NumAlive++;
 		}
 	}
 
-	return NumAlive < MaxNumberOfBots;
+	return NumAlive < MaxNumberOfEnemies;
 }
 
-void ASpellsGameModeBase::OnSpawnBotEQ_Completed(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus)
+void ASpellsGameModeBase::OnSpawnEnemyEQ_Completed(UEnvQueryInstanceBlueprintWrapper* QueryInstance, EEnvQueryStatus::Type QueryStatus)
 {
 	if (QueryStatus != EEnvQueryStatus::Success)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawn Bot EQS Query Failed!"));
+		UE_LOG(LogTemp, Warning, TEXT("Spawn Enemy EQS Query Failed!"));
 	}
 	else
 	{
-		if (!CanSpawnBot())
+		if (!CanSpawnEnemy())
 		{
 			return;
 		}
@@ -111,9 +112,49 @@ void ASpellsGameModeBase::OnSpawnBotEQ_Completed(UEnvQueryInstanceBlueprintWrapp
 		const TArray<FVector>& Locations = QueryInstance->GetResultsAsLocations();
 		if (Locations.Num() > 0)
 		{
-			FActorSpawnParameters ActorSpawnParameters;
-			ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-			SpawnedBots.Add(GetWorld()->SpawnActor<ASAICharacter>(SpawnBotClass, Locations[0], FRotator::ZeroRotator, ActorSpawnParameters));
+			if (IsValid(EnemiesDataTable) && EnemiesDataTable->GetRowMap().Num() > 0)
+			{
+				TArray<FSEnemyInfoRow*> EnemyInfoRows;
+				EnemiesDataTable->GetAllRows("", EnemyInfoRows);
+				// Get a random enemy from the table
+				const int32 RandomIndex = FMath::RandRange(0, EnemyInfoRows.Num() - 1);
+				FSEnemyInfoRow* RandomEnemyInfoRow = EnemyInfoRows.IsValidIndex(RandomIndex)
+											? EnemyInfoRows[RandomIndex]
+											: nullptr;
+				if (RandomEnemyInfoRow && RandomEnemyInfoRow->EnemyData && RandomEnemyInfoRow->EnemyData->EnemyClass)
+				{
+					FActorSpawnParameters ActorSpawnParameters;
+					ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+					const int32 NewEnemyIndex = SpawnedEnemies.Emplace(GetWorld()->SpawnActor<ASAICharacter>(RandomEnemyInfoRow->EnemyData->EnemyClass, Locations[0], FRotator::ZeroRotator, ActorSpawnParameters));
+					if (NewEnemyIndex > -1)
+					{
+						ASAICharacter* EnemyCharacter = SpawnedEnemies[NewEnemyIndex];
+						if (NewEnemyIndex == 0) // only log for the first one
+						{
+							UE_LOG(LogTemp, Log, TEXT("Spawned enemy: %s with enemy data: %s"), 
+								*GetNameSafe(EnemyCharacter), 
+								*GetNameSafe(RandomEnemyInfoRow->EnemyData));
+						}
+
+						// grant actions to the spawned enemy
+						if (USActionsComponent* EnemyActionsComp = EnemyCharacter->GetActionsComponent())
+						{
+							for (const TSubclassOf<USAction>& ActionClass : RandomEnemyInfoRow->EnemyData->Actions)
+							{
+								EnemyActionsComp->AddAction(EnemyCharacter, ActionClass);
+							}
+						}
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("No enemy class defined in the DataTable of Enemies to spawn for row %d"), RandomIndex);
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("No enemies defined in the DataTable of Enemies to spawn"));
+			}
 		}
 	}
 }
@@ -158,29 +199,35 @@ void ASpellsGameModeBase::OnPickableSpawnQueryCompleted(UEnvQueryInstanceBluepri
 	}
 }
 
-void ASpellsGameModeBase::KillAllBots()
+void ASpellsGameModeBase::KillAllEnemies()
 {
 #if !UE_BUILD_SHIPPING
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	for (const ASAICharacter* Bot: SpawnedBots)
+	for (const ASAICharacter* Enemy: SpawnedEnemies)
 	{
-		Bot->GetAttributesComponent()->Kill(PlayerController);
+		Enemy->GetAttributesComponent()->Kill(PlayerController);
 	}
+
+	SpawnedEnemies.Empty();
 #endif
 }
 
 void ASpellsGameModeBase::OnActorKilled(AActor* Killed, AActor* Killer)
 {
-	if (const ASCharacter* KilledPlayer = Cast<ASCharacter>(Killed))
+	if (const ASCharacter* KilledCharacter = Cast<ASCharacter>(Killed))
 	{
 		FTimerHandle SpawnPlayerTimerHandle;
 		FTimerDelegate SpawnPlayerTimerDelegate;
-		APlayerController* PlayerController = KilledPlayer->GetController<APlayerController>();
+		APlayerController* PlayerController = KilledCharacter->GetController<APlayerController>();
 		check(PlayerController);
 		SpawnPlayerTimerDelegate.BindUObject(this, &AGameModeBase::RestartPlayer, static_cast<AController*>(PlayerController));
 		PlayerController->UnPossess();
 		Killed->SetLifeSpan(RespawnPlayerTime + 0.6f);
 		GetWorldTimerManager().SetTimer(SpawnPlayerTimerHandle, SpawnPlayerTimerDelegate, RespawnPlayerTime, false);
+	}
+	else if (ASAICharacter* KilledAICharacter = Cast<ASAICharacter>(Killed))
+	{
+		SpawnedEnemies.Remove(KilledAICharacter);
 	}
 
 	if (const APawn* KillerPawn = Cast<APawn>(Killer))
@@ -264,25 +311,25 @@ void ASpellsGameModeBase::LoadSaveGame()
 	}
 }
 
-void ASpellsGameModeBase::SpawnBotTimerElapsed()
+void ASpellsGameModeBase::SpawnEnemyTimerElapsed()
 {
-	if (!Spells_CVarSpawnBots.GetValueOnAnyThread())
+	if (!Spells_CVarSpawnEnemies.GetValueOnAnyThread())
 	{
 		return;
 	}
 
-	if (ensureMsgf(SpawnBotQuery, TEXT("Set the Spawn Bot EQS to be able to spawn bots in the Game Mode")))
+	if (ensureMsgf(SpawnEnemyQuery, TEXT("Set the Spawn Enemy EQS to be able to spawn enemies in the Game Mode")))
 	{
-		if (!CanSpawnBot())
+		if (!CanSpawnEnemy())
 		{
 			return;
 		}
 
-		UEnvQueryInstanceBlueprintWrapper* EQ_BP_Wrapper = UEnvQueryManager::RunEQSQuery(this, SpawnBotQuery, this, EEnvQueryRunMode::RandomBest5Pct, nullptr /** result in blueprint not needed */);
+		UEnvQueryInstanceBlueprintWrapper* EQ_BP_Wrapper = UEnvQueryManager::RunEQSQuery(this, SpawnEnemyQuery, this, EEnvQueryRunMode::RandomBest5Pct, nullptr /** result in blueprint not needed */);
 		if (ensure(EQ_BP_Wrapper))
 		{
 			// wait for results - bind
-			EQ_BP_Wrapper->GetOnQueryFinishedEvent().AddDynamic(this,&ASpellsGameModeBase::OnSpawnBotEQ_Completed);
+			EQ_BP_Wrapper->GetOnQueryFinishedEvent().AddDynamic(this,&ASpellsGameModeBase::OnSpawnEnemyEQ_Completed);
 		}
 	}
 }
