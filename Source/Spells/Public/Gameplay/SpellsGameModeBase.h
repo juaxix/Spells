@@ -26,7 +26,7 @@ struct FSEnemyInfoRow : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
-	USEnemyDataAsset* EnemyData;
+	FPrimaryAssetId EnemyAssetId;
 
 	/** Relative change to use this monster entry to be spawned */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawn")
@@ -77,7 +77,9 @@ protected:
 	/// only used for debugging
 	UFUNCTION(Exec, Category = "Spells|Enemies")
 	void KillAllEnemies();
-	
+
+	void OnAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVector SpawnLocation);
+
 	void SpawnEnemyTimerElapsed();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Spells|Enemies Spawning", meta = (AllowPrivateAccess = "true"))

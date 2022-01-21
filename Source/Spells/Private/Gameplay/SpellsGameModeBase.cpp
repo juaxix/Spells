@@ -3,16 +3,18 @@
 #include "Gameplay/SpellsGameModeBase.h"
 
 // Unreal includes
+#include "Engine/AssetManager.h"
 #include "EngineUtils.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
+#include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 
 // Spells includes
 #include "AI/SAICharacter.h"
 #include "Data/SEnemyDataAsset.h"
-#include "GameFramework/GameStateBase.h"
+#include "Engine/AssetManagerSettings.h"
 #include "Gameplay/SAttributesComponent.h"
 #include "Gameplay/SInteractableInterface.h"
 #include "Gameplay/SSaveGame.h"
@@ -121,34 +123,12 @@ void ASpellsGameModeBase::OnSpawnEnemyEQ_Completed(UEnvQueryInstanceBlueprintWra
 				FSEnemyInfoRow* RandomEnemyInfoRow = EnemyInfoRows.IsValidIndex(RandomIndex)
 											? EnemyInfoRows[RandomIndex]
 											: nullptr;
-				if (RandomEnemyInfoRow && RandomEnemyInfoRow->EnemyData && RandomEnemyInfoRow->EnemyData->EnemyClass)
-				{
-					FActorSpawnParameters ActorSpawnParameters;
-					ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-					const int32 NewEnemyIndex = SpawnedEnemies.Emplace(GetWorld()->SpawnActor<ASAICharacter>(RandomEnemyInfoRow->EnemyData->EnemyClass, Locations[0], FRotator::ZeroRotator, ActorSpawnParameters));
-					if (NewEnemyIndex > -1)
-					{
-						ASAICharacter* EnemyCharacter = SpawnedEnemies[NewEnemyIndex];
-						if (NewEnemyIndex == 0) // only log for the first one
-						{
-							UE_LOG(LogTemp, Log, TEXT("Spawned enemy: %s with enemy data: %s"), 
-								*GetNameSafe(EnemyCharacter), 
-								*GetNameSafe(RandomEnemyInfoRow->EnemyData));
-						}
 
-						// grant actions to the spawned enemy
-						if (USActionsComponent* EnemyActionsComp = EnemyCharacter->GetActionsComponent())
-						{
-							for (const TSubclassOf<USAction>& ActionClass : RandomEnemyInfoRow->EnemyData->Actions)
-							{
-								EnemyActionsComp->AddAction(EnemyCharacter, ActionClass);
-							}
-						}
-					}
-				}
-				else
+				if (UAssetManager* AssetManager = UAssetManager::GetIfValid())
 				{
-					UE_LOG(LogTemp, Warning, TEXT("No enemy class defined in the DataTable of Enemies to spawn for row %d"), RandomIndex);
+					const FStreamableDelegate AssetsLoadedCallback = FStreamableDelegate::CreateUObject(this, 
+						&ASpellsGameModeBase::OnAssetsLoaded, RandomEnemyInfoRow->EnemyAssetId, Locations[0]);
+					AssetManager->LoadPrimaryAsset(RandomEnemyInfoRow->EnemyAssetId, TArray<FName>(), AssetsLoadedCallback);
 				}
 			}
 			else
@@ -156,6 +136,54 @@ void ASpellsGameModeBase::OnSpawnEnemyEQ_Completed(UEnvQueryInstanceBlueprintWra
 				UE_LOG(LogTemp, Warning, TEXT("No enemies defined in the DataTable of Enemies to spawn"));
 			}
 		}
+	}
+}
+
+void ASpellsGameModeBase::OnAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVector SpawnLocation)
+{
+	USEnemyDataAsset* EnemyData = nullptr;
+	if (const UAssetManager* AssetManager = UAssetManager::GetIfValid())
+	{
+		EnemyData = Cast<USEnemyDataAsset>(AssetManager->GetPrimaryAssetObject(LoadedAssetId));
+	}
+
+	if (EnemyData && EnemyData->EnemyClass)
+	{
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		const int32 NewEnemyIndex = SpawnedEnemies.Emplace(GetWorld()->SpawnActor<ASAICharacter>(
+			EnemyData->EnemyClass, 
+			SpawnLocation, 
+			FRotator::ZeroRotator, 
+			ActorSpawnParameters));
+
+		if (NewEnemyIndex > -1)
+		{
+			ASAICharacter* EnemyCharacter = SpawnedEnemies[NewEnemyIndex];
+			if (NewEnemyIndex == 0) // only log for the first one
+			{
+				UE_LOG(LogTemp, Log, TEXT("Spawned enemy: %s with enemy data: %s"), 
+					*GetNameSafe(EnemyCharacter), 
+					*GetNameSafe(EnemyData));
+			}
+
+			// grant actions to the spawned enemy
+			if (USActionsComponent* EnemyActionsComp = EnemyCharacter->GetActionsComponent())
+			{
+				for (const TSubclassOf<USAction>& ActionClass : EnemyData->Actions)
+				{
+					EnemyActionsComp->AddAction(EnemyCharacter, ActionClass);
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Could not spawn Enemy for AssetId %s"), *LoadedAssetId.ToString());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No enemy class defined in the DataTable of Enemies to spawn for AssetId %s"), *LoadedAssetId.ToString());
 	}
 }
 

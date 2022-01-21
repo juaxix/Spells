@@ -18,8 +18,13 @@ class SPELLS_API USEnemyDataAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
-
 public:
+	FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId("Enemies", GetFName());
+	}
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spawn Info")
 	TSubclassOf<AActor> EnemyClass;
 
