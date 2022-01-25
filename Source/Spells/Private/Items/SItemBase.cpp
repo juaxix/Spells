@@ -9,4 +9,6 @@ ASItemBase::ASItemBase()
 	RootComponent = BaseStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseStaticMesh"));
 	LidStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LidStaticMesh"));
 	LidStaticMesh->SetupAttachment(RootComponent);
+
+	bReplicates = true;
 }

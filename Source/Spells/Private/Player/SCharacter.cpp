@@ -54,6 +54,9 @@ ASCharacter::ASCharacter()
 
 	SpringArmComponent->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
+
+	bReplicates = true;
+	ACharacter::GetMovementComponent()->SetIsReplicated(true);
 }
 
 void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -89,27 +92,12 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 		{
 			DisableInput(PlayerController);
 			SetCanBeDamaged(false);
-			
-			/* TODO -- remote player health bar
-			if (IsValid(WorldHealthBar))
-			{
-				WorldHealthBar->RemoveFromParent();
-				WorldHealthBar = nullptr;
-			}*/
+			ACharacter::GetMovementComponent()->StopMovementImmediately();
 		}
 		else 
 		{
 			if (IsValid(PlayerController))
 			{
-				/* TODO -- remote player health bar
-				if (!IsValid(WorldHealthBar) && WorldHealthBarClass)
-				{
-					WorldHealthBar = CreateWidget<USWorldUserWidget>(PlayerController, WorldHealthBarClass);
-					check(WorldHealthBar);
-					WorldHealthBar->AttachedActor = this;
-					WorldHealthBar->AddToViewport();
-				}*/
-
 				if (CameraShake)
 				{
 					PlayerController->ClientStartCameraShake(CameraShake, CameraShakeScale);
@@ -139,8 +127,10 @@ void ASCharacter::SprintStop()
 void ASCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	DrawDebug();
+	if (bDebugMode)
+	{
+		DrawDebug();
+	}
 }
 #endif
 

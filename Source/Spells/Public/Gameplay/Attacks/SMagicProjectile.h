@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 
 #include "SMagicProjectile.generated.h"
 
@@ -51,6 +52,13 @@ public:
 protected:
 	virtual void PostInitializeComponents() override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+		DOREPLIFETIME(ASMagicProjectile, Damage);
+	}
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Projectile")
 	USphereComponent* SphereComponent = nullptr;
 
@@ -63,7 +71,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spells|Attack", meta = (Tooltip = "Action Effect list to apply on hit to the target"))
 	TArray<TSubclassOf<USActionEffect>> ActionEffectClasses;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Damage", meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Spells|Damage", meta = (AllowPrivateAccess = true))
 	float Damage = 20.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Damage", meta = (AllowPrivateAccess = true))

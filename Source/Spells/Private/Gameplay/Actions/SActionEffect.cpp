@@ -12,6 +12,8 @@ void USActionEffect::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
+	ActionRepData.Instigator = Instigator;
+
 	// start timers
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	if (Duration > 0.0f)
@@ -28,12 +30,16 @@ void USActionEffect::StartAction_Implementation(AActor* Instigator)
 		TimerManager.SetTimer(PeriodHandle, PeriodDelegate, Period, true);
 	}
 
-	TimeStarted = GetWorld()->TimeSeconds;
+	// only set the initial time in the server
+	if (GetOwningComponent()->GetOwner()->HasAuthority())
+	{
+		TimeStarted = GetWorld()->TimeSeconds;
+	}
 }
 
 void USActionEffect::StopAction_Implementation(AActor* Instigator)
 {
-	if (!bIsActive)
+	if (!ActionRepData.bIsRunning)
 	{
 		return;
 	}

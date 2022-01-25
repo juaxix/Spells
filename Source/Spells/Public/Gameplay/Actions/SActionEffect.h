@@ -2,8 +2,13 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
+#include "GameFramework/GameStateBase.h"
+
+// Spells includes
 #include "Gameplay/Actions/SAction.h"
+
 #include "SActionEffect.generated.h"
 
 /**
@@ -24,8 +29,24 @@ public:
 
 	virtual void StopAction_Implementation(AActor* Instigator) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+		DOREPLIFETIME(USActionEffect, TimeStarted);
+	}
+
 	UFUNCTION(BlueprintPure, Category  = "Spells|Action Effects")
-	float GetRemainingTime() const { return (TimeStarted + Duration) - GetWorld()->TimeSeconds; }
+	float GetRemainingTime() const
+	{
+		const UWorld* World = GetWorld();
+		const AGameStateBase* GameState = World->GetGameState();
+		const float TimeSeconds = IsValid(GameState)
+					? GameState->GetServerWorldTimeSeconds()
+					: World->TimeSeconds;
+
+		return (TimeStarted + Duration) - TimeSeconds;
+	}
 
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Action Effects")
@@ -37,7 +58,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
 	float Period = 0.0f;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Action Effects", meta = (AllowPrivateAccess = true))
 	float TimeStarted = 0.0f;
 
 	FTimerHandle DurationHandle;

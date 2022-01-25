@@ -19,12 +19,21 @@ public:
 	virtual void PrimaryAction();
 
 protected:
+	UFUNCTION(Server, Reliable)
+	void Server_PrimaryAction(AActor* InFocus);
+
 	virtual void FindBestInteractable();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
 	{
 		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-		FindBestInteractable();
+		if (APawn* Pawn = Cast<APawn>(GetOwner()))
+		{
+			if (Pawn->IsLocallyControlled())
+			{
+				FindBestInteractable();
+			}
+		}
 	}
 
 	virtual void OnFocusing(AActor* NewTargetActor);
@@ -42,7 +51,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
 	uint8 bCheckForWalls:1;
-
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Setup", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<USWorldUserWidget> InteractionWidgetClass;

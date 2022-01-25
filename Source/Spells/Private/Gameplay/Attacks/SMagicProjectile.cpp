@@ -31,12 +31,17 @@ ASMagicProjectile::ASMagicProjectile()
 	ProjectileMovementComponent->InitialSpeed = 1000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->bInitialVelocityInLocalSpace = true;
+
+	bReplicates = true;
+	ProjectileMovementComponent->SetIsReplicated(true);
+
+	InitialLifeSpan = 32.0f;
 }
 
 void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APawn* ThisInstigator = GetInstigator();
-	if (IsValid(OtherActor) && OtherActor != ThisInstigator )
+	if (IsValid(OtherActor) && OtherActor != ThisInstigator)
 	{
 		USActionsComponent* ActionsComponent = Cast<USActionsComponent>(OtherActor->GetComponentByClass(USActionsComponent::StaticClass()));
 		if (IsValid(ActionsComponent) && ActionsComponent->ActiveGameplayTags.HasTag(CounterSpellTag))
@@ -51,7 +56,7 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 		if (USGameplayBlueprintFunctions::ApplyDamage(ThisInstigator, OtherActor, Damage, SweepResult))
 		{
 			OnProjectileStopped(SweepResult);
-			if (ActionEffectClasses.Num() > 0 && IsValid(ActionsComponent))
+			if (ActionEffectClasses.Num() > 0 && IsValid(ActionsComponent) && HasAuthority())
 			{
 				for (TSubclassOf<USActionEffect> ActionEffect : ActionEffectClasses)
 				{

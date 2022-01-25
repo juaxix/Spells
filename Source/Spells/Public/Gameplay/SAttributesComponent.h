@@ -2,8 +2,11 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Net/UnrealNetwork.h"
+
 #include "SAttributesComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FSOnAttributeChanged, AActor*, InstigatorActor, class USAttributesComponent*, AttributeComponent, float, NewValue, float, Delta, const FHitResult&, Hit);
@@ -28,6 +31,15 @@ public:
 		return IsValid(FromActor) ? Cast<USAttributesComponent>(FromActor->GetComponentByClass(USAttributesComponent::StaticClass())) : nullptr;
 	}
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+		DOREPLIFETIME(USAttributesComponent, Health);
+		DOREPLIFETIME(USAttributesComponent, Mana);
+		DOREPLIFETIME(USAttributesComponent, Rage);
+	}
+
 	UFUNCTION(BlueprintPure, Category = "Spells|Health") FORCEINLINE
 	bool IsAlive() const { return Health > 0.0f;}
 	
@@ -47,7 +59,7 @@ public:
 	void Kill(AActor* KillerActor = nullptr) { ApplyHealthChange(-MaxHealth, KillerActor, FHitResult()); }
 
 	UFUNCTION(BlueprintCallable, Category = "Spells|Mana")
-	void ApplyManaChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
+	bool ApplyManaChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Mana") FORCEINLINE
 	float GetCurrentMana() const { return Mana; }
@@ -56,13 +68,31 @@ public:
 	float GetMaximumMana() const { return MaxMana; }
 
 	UFUNCTION(BlueprintCallable, Category = "Spells|Rage")
-	void ApplyRageChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
+	bool ApplyRageChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit);
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Rage") FORCEINLINE
 	float GetCurrentRage() const { return Rage; }
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Rage") FORCEINLINE
 	float GetMaximumRage() const { return MaxRage; }
+
+	UFUNCTION()
+	void OnRep_Health(float OldHealth)
+	{
+		OnHealthAttributeChanged.Broadcast(nullptr, nullptr, Health, Health - OldHealth, FHitResult());
+	}
+
+	UFUNCTION()
+	void OnRep_Mana(float OldMana)
+	{
+		OnManaAttributeChanged.Broadcast(nullptr, nullptr, Mana, Mana - OldMana, FHitResult());
+	}
+
+	UFUNCTION()
+	void OnRep_Rage(float OldRage)
+	{
+		OnRageAttributeChanged.Broadcast(nullptr, nullptr, Rage, Rage - OldRage, FHitResult());
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintAssignable, Category = "Spells|Health")
 	FSOnAttributeChanged OnHealthAttributeChanged;
@@ -74,19 +104,19 @@ public:
 	FSOnAttributeChanged OnRageAttributeChanged;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
+	UPROPERTY(ReplicatedUsing = OnRep_Health, EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float Health = 100.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float MaxHealth = 100.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
+	UPROPERTY(ReplicatedUsing = OnRep_Mana, EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float Mana = 200.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float MaxMana = 200.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
+	UPROPERTY(ReplicatedUsing = OnRep_Rage, EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes")
 	float Rage = 0.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Attributes", meta = (ClampMin=0.0f, ClampMax=300.0f, UIMin=0.0f, UIMax=300.0f))

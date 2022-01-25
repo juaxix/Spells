@@ -10,7 +10,22 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FSOnActionPostLoad, AActor*);
 // Engine includes
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Net/UnrealNetwork.h"
+
 #include "SAction.generated.h"
+
+USTRUCT(BlueprintType)
+struct FSActionRepData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = "Spells|Actions|Replication")
+	bool bIsRunning = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category = "Spells|Actions|Replication")
+	AActor* Instigator = nullptr;
+};
 
 /**
  * To create child classes as BPs for different actions used in the @see USActionComponent
@@ -21,8 +36,11 @@ class SPELLS_API USAction : public UObject
 	GENERATED_BODY()
 
 public:
-	USAction() : bIsActive(false) , bAutoStart(false) { }
-	
+	USAction() : bAutoStart(false) { }
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
+	void SetActionsOwner(USActionsComponent* InActionsComponent) { OwningActionsComponent = InActionsComponent; }
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StartAction(AActor* Instigator);
 
@@ -34,30 +52,43 @@ public:
 	virtual void ReceiveAnimationNotif_Implementation(){}
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
-	USActionsComponent* GetOwningComponent() const;
+	USActionsComponent* GetOwningComponent() const { return OwningActionsComponent; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Spells|Actions")
 	bool CanStart(AActor* Instigator);
 	virtual bool CanStart_Implementation(AActor* Instigator)
 	{
-		return !bIsActive && !GetOwningComponent()->ActiveGameplayTags.HasAny(BlockedTags);
+		return !ActionRepData.bIsRunning && !GetOwningComponent()->ActiveGameplayTags.HasAny(BlockedTags);
 	}
 
 	UFUNCTION(BlueprintPure, Category  = "Spells|Actions")
-	bool IsActive() const { return bIsActive; }
+	bool IsActive() const { return ActionRepData.bIsRunning; }
 
 	UFUNCTION(BlueprintPure, Category  = "Spells|Actions")
 	bool IsAutoStart() const { return bAutoStart; }
 
-	virtual UWorld* GetWorld() const override
+	UFUNCTION()
+	void OpRep_IsActive()
 	{
-		if (UActorComponent* ActorComponent = Cast<UActorComponent>(GetOuter()))
+		if (ActionRepData.bIsRunning)
 		{
-			return ActorComponent->GetWorld();
+			StartAction(ActionRepData.Instigator);
 		}
-
-		return nullptr;
+		else
+		{
+			StopAction(ActionRepData.Instigator);
+		}
 	}
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+		DOREPLIFETIME(USAction, ActionRepData);
+		DOREPLIFETIME(USAction, OwningActionsComponent);
+	}
+
+	bool IsSupportedForNetworking() const override { return true; }
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Tags", meta = (Tooltip = "Tags added to the owning actor when activated, removed when the action stops"))
 	FGameplayTagContainer GrantTags;
@@ -73,8 +104,11 @@ public:
 	TSoftObjectPtr<UTexture2D> Icon;
 	
 protected:
-	UPROPERTY(VisibleInstanceOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
-	uint8 bIsActive:1;
+	UPROPERTY(Replicated, VisibleInstanceOnly, Category = "Spells|Actions")
+	USActionsComponent* OwningActionsComponent = nullptr;
+
+	UPROPERTY(ReplicatedUsing = OpRep_IsActive, VisibleInstanceOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
+	FSActionRepData ActionRepData;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
 	uint8 bAutoStart:1;

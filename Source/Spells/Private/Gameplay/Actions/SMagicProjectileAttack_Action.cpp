@@ -15,29 +15,52 @@ namespace
 	constexpr float MaxHitScanDistanceLook = 10000.0f;
 }
 
+FCollisionObjectQueryParams USMagicProjectileAttack_Action::ObjParams;
+
+USMagicProjectileAttack_Action::USMagicProjectileAttack_Action()
+	: bIsRepeatedAttack(false)
+	, bRepeatingAction(false)
+{
+	if (!ObjParams.IsValid())
+	{
+		ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+		ObjParams.AddObjectTypesToQuery(ECC_WorldStatic);
+		ObjParams.AddObjectTypesToQuery(ECC_Pawn);
+	}
+}
+
 void USMagicProjectileAttack_Action::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
-	Character = Cast<ACharacter>(Instigator);
-	if (ensureAlwaysMsgf(IsValid(Character), TEXT("Character for a Magic Projectile Attack action must be valid")))
+	if (Instigator)
 	{
-		SkeletalSocket = Character->GetMesh()->GetSocketByName(SkeletalSocketName);
-		check(SkeletalSocket);
+		Character = Cast<ACharacter>(Instigator);
+	}
 
-		if (bIsRepeatedAttack)
+	if (bIsRepeatedAttack)
+	{
+		bRepeatingAction = true;
+	}
+
+	//if (ensureAlwaysMsgf(IsValid(Character), TEXT("Character for a Magic Projectile Attack action must be valid")))
+	{
+		if (Character)
 		{
-			bRepeatingAction = true;
+			SkeletalSocket = Character->GetMesh()->GetSocketByName(SkeletalSocketName);
+			Character->PlayAnimMontage(AnimMontage);
 		}
-
-		Character->PlayAnimMontage(AnimMontage);
 	}
 }
 
 void USMagicProjectileAttack_Action::ReceiveAnimationNotif_Implementation()
 {
 	Super::ReceiveAnimationNotif_Implementation();
-	DoMagicalAttack();
-	if (bIsActive)
+	if (IsValid(Character) && Character->HasAuthority())
+	{
+		DoMagicalAttack();
+	}
+
+	if (ActionRepData.bIsRunning)
 	{
 		if (bRepeatingAction)
 		{
@@ -50,42 +73,38 @@ void USMagicProjectileAttack_Action::ReceiveAnimationNotif_Implementation()
 	}
 }
 
-bool USMagicProjectileAttack_Action::DoMagicalAttack()
+void USMagicProjectileAttack_Action::DoMagicalAttack()
 {
 	ensureAlwaysMsgf(AttackProjectileClass != nullptr, TEXT("AttackProjectileClass needs a class"));
+
 	FRotator ProjectileRotation;
 	UWorld* World = GetWorld();
 	FVector HandLocation = SkeletalSocket->GetSocketLocation(Character->GetMesh());
 	
-	if (APlayerController* PlayerController = Character->GetController<APlayerController>())
+	ProjectileRotation = Character->GetControlRotation();
+	FHitResult Hit;
+	FCollisionQueryParams CollisionQueryParams;
+	CollisionQueryParams.AddIgnoredActor(Character);
+	FVector LookStart = Character->GetActorLocation() + FVector(0.0f,0.0f,Character->BaseEyeHeight);
+	FVector LookEnd = LookStart + ProjectileRotation.Vector() * MaxHitScanDistanceLook;
+	
+	if (World->LineTraceSingleByObjectType(Hit, LookStart, LookEnd, ObjParams, CollisionQueryParams))
 	{
-		ProjectileRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-		FHitResult Hit;
-		FCollisionQueryParams CollisionQueryParams;
-		CollisionQueryParams.AddIgnoredActor(Character);
-		FVector LookStart = PlayerController->PlayerCameraManager->GetCameraLocation();
-		FVector LookEnd = LookStart + PlayerController->PlayerCameraManager->GetActorForwardVector() * MaxHitScanDistanceLook;
-		
-		if (World->LineTraceSingleByObjectType(Hit, LookStart, LookEnd, FCollisionObjectQueryParams::AllObjects, CollisionQueryParams))
+		LookEnd = Hit.ImpactPoint;
+		if (bDebugMode)
 		{
-			LookEnd = Hit.ImpactPoint;
-			if (bDebugMode)
-			{
-				DrawDebugSphere(World, LookEnd, 23.f, 12, FColor::Red, false, 1.5f);
-			}
-
-			ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
+			DrawDebugSphere(World, LookEnd, 23.f, 12, FColor::Red, false, 1.5f);
 		}
-	}
-	else
-	{
-		ProjectileRotation = Character->GetControlRotation();
-	}
 
+		ProjectileRotation = FRotationMatrix::MakeFromX(LookEnd - HandLocation).Rotator();
+	}
+	
 	const FTransform SpawnTransform = FTransform(ProjectileRotation, HandLocation);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	SpawnParams.Instigator = Character;
-
-	return IsValid(World->SpawnActor<ASMagicProjectile>(AttackProjectileClass, SpawnTransform, SpawnParams));
+	if (!IsValid(World->SpawnActor<ASMagicProjectile>(AttackProjectileClass, SpawnTransform, SpawnParams)))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not spawn a magic projectile %s"), *GetNameSafe(AttackProjectileClass));
+	}
 }

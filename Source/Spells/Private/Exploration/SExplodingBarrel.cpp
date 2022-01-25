@@ -20,6 +20,8 @@ ASExplodingBarrel::ASExplodingBarrel()
 	RadialForceComponent->bImpulseVelChange = true;
 	RadialForceComponent->AddCollisionChannelToAffect(ECC_WorldDynamic);
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
+
+	bReplicates = true;
 }
 
 void ASExplodingBarrel::PostInitializeComponents()

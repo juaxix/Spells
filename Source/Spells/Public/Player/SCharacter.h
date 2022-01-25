@@ -13,6 +13,7 @@
 
 #include "SCharacter.generated.h"
 
+class ASMagicProjectile;
 class USCharacterInteractionComponent;
 class USpringArmComponent;
 class UCameraComponent;

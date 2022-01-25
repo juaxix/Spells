@@ -18,20 +18,19 @@ bool USGameplayBlueprintFunctions::ApplyDamage(AActor* DamageCauser, AActor* Tar
 			Character->AttributesComponent->ApplyManaChange(Character->DamageDoneToManaFraction * DamageAmount, TargetActor, HitResult);
 		}
 
-		if (AttributesComponent->ApplyHealthChange(-DamageAmount, DamageCauser, HitResult))
+		if (AttributesComponent->ApplyHealthChange(-DamageAmount, DamageCauser, HitResult) &&
+			!AttributesComponent->IsAlive())
 		{
-			if (!AttributesComponent->IsAlive())
+			UPrimitiveComponent* HitComp = HitResult.GetComponent();
+			if (HitComp && HitComp->IsSimulatingPhysics(HitResult.BoneName))
 			{
-				UPrimitiveComponent* HitComp = HitResult.GetComponent();
-				if (HitComp && HitComp->IsSimulatingPhysics(HitResult.BoneName))
-				{
-					const FVector Direction = (HitResult.TraceEnd - HitResult.TraceStart).GetSafeNormal();
-					HitComp->AddImpulseAtLocation(Direction * Spells_CVarApplyDamageForce.GetValueOnAnyThread(), HitResult.ImpactPoint, HitResult.BoneName);
-				}
+				const FVector Direction = (HitResult.TraceEnd - HitResult.TraceStart).GetSafeNormal();
+				HitComp->AddImpulseAtLocation(Direction * Spells_CVarApplyDamageForce.GetValueOnAnyThread(), HitResult.ImpactPoint, HitResult.BoneName);
 			}
-
-			return true;
 		}
+
+		return true;
+		
 	}
 
 	return false;

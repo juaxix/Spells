@@ -30,13 +30,14 @@ ASAICharacter::ASAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
+	bReplicates = true;
 }
 
 void ASAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ApplyAggroLevelChange(nullptr, ESAIAggroLevels::IDLE);
+	Multicast_ApplyAggroLevelChange(nullptr, ESAIAggroLevels::IDLE);
 
 	// cache muzzle
 	MuzzleSocket = GetMesh()->GetSocketByName(SMUZZLE_NAME);
@@ -44,6 +45,22 @@ void ASAICharacter::BeginPlay()
 	// bind events
 	PawnSensingComponent->OnSeePawn.AddDynamic(this, &ASAICharacter::OnPawnInSight);
 	AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASAICharacter::OnHealthChanged);
+}
+
+void ASAICharacter::CreateSpotWidget()
+{
+	if (AggroLevel != ESAIAggroLevels::IDLE)
+	{
+		if (!SpottedWidget)
+		{
+			SpottedWidget = CreateWidget<USWorldUserWidget>(GetWorld(), SpottedWidgetClass);
+			if (SpottedWidget)
+			{
+				SpottedWidget->AttachedActor = this;
+				SpottedWidget->AddToViewport(10); // if ZOrder > 0 place this widget over others to avoid be behind health
+			}
+		}
+	}
 }
 
 void ASAICharacter::OnPawnInSight(APawn* InPawn)
@@ -56,17 +73,8 @@ void ASAICharacter::OnPawnInSight(APawn* InPawn)
 		}
 
 		AIController->SetCurrentTargetActor(InPawn);
-		if (!SpottedWidget)
-		{
-			SpottedWidget = CreateWidget<USWorldUserWidget>(GetWorld(), SpottedWidgetClass);
-			if (SpottedWidget)
-			{
-				SpottedWidget->AttachedActor = this;
-				SpottedWidget->AddToViewport(10); // if ZOrder > 0 place this widget over others to avoid be behind health
-			}
-		}
-
-		ApplyAggroLevelChange(InPawn, ESAIAggroLevels::SPOTTED);
+		
+		Multicast_ApplyAggroLevelChange(InPawn, ESAIAggroLevels::SPOTTED);
 
 		if (bDebug)
 		{

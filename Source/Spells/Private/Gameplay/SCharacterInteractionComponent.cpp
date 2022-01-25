@@ -28,7 +28,22 @@ void USCharacterInteractionComponent::PrimaryAction()
 {
 	if (IsValid(TargetActor))
 	{
-		ISInteractableInterface::Execute_Interact(TargetActor, Cast<ACharacter>(GetOwner()));
+		Server_PrimaryAction(TargetActor);
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Emerald, TEXT("Nothing to interact with"));
+		}
+	}
+}
+
+void USCharacterInteractionComponent::Server_PrimaryAction_Implementation(AActor* InFocus)
+{
+	if (IsValid(InFocus))
+	{
+		ISInteractableInterface::Execute_Interact(InFocus, Cast<ACharacter>(GetOwner()));
 	}
 	else
 	{

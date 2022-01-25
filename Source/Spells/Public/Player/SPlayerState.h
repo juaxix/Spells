@@ -2,8 +2,11 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Net/UnrealNetwork.h"
+
 #include "SPlayerState.generated.h"
 
 class USSaveGame;
@@ -19,6 +22,11 @@ class SPELLS_API ASPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
+	ASPlayerState()
+	{
+		bReplicates = true;
+	}
+	
 	UFUNCTION(BlueprintPure, Category = "Spells|Credits") FORCEINLINE
 	int32 GetCredits() const { return Credits; }
 
@@ -33,12 +41,28 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void LoadPlayerState(USSaveGame* SaveGame);
+	
+protected:
+	UFUNCTION()
+	void OnRep_Credits(int32 OldCredits)
+	{
+		OnCreditsChanged.Broadcast(this, Credits, Credits - OldCredits);
+	}
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+		DOREPLIFETIME(ASPlayerState, Credits);
+	}
+
+public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Spells|Credits")
 	FSOnCreditsChanged OnCreditsChanged;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Spells|Credits")
+	UPROPERTY(ReplicatedUsing = OnRep_Credits, EditDefaultsOnly, Category = "Spells|Credits")
 	int32 Credits = 0;
 	
 };

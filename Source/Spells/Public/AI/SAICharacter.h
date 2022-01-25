@@ -43,18 +43,22 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Spells|AI|Actions") FORCEINLINE
 	USActionsComponent* GetActionsComponent() const { return ActionsComponent; }
 
-	UFUNCTION(BlueprintCallable, Category = "Spells|Aggro")
-	void ApplyAggroLevelChange(AActor* InstigatorActor, ESAIAggroLevels NewAggroLevel)
+	UFUNCTION(NetMulticast, Unreliable, BlueprintCallable, Category = "Spells|Aggro")
+	void Multicast_ApplyAggroLevelChange(AActor* InstigatorActor, ESAIAggroLevels NewAggroLevel);
+	void Multicast_ApplyAggroLevelChange_Implementation(AActor* InstigatorActor, ESAIAggroLevels NewAggroLevel)
 	{
 		if (AggroLevel != NewAggroLevel)
 		{
 			AggroLevel = NewAggroLevel;
 			OnEnemyAggroChanged.Broadcast(InstigatorActor, AggroLevel);
+			CreateSpotWidget();
 		}
 	}
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void CreateSpotWidget();
 
 	UFUNCTION()
 	virtual void OnPawnInSight(APawn* InPawn);

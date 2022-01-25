@@ -4,20 +4,28 @@
 
 // Unrea includes
 #include "GameFramework/Character.h"
+#include "Engine/ActorChannel.h"
 
 // Spells game includes
+#include "Spells/Spells.h"
 #include "Gameplay/Actions/SAction.h"
+
+DECLARE_CYCLE_STAT(TEXT("Spells_StartActionByName"), STAT_SpellsTartActionByName, STATGROUP_SPELLS);
 
 void USActionsComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	const UWorld* World = GetWorld();
 
-	if (DefaultActions.Num() > 0 && !GIsCookerLoadingPackage && !GIsEditorLoadingPackage && !HasAnyFlags(RF_ClassDefaultObject) && IsValid(World) && World->IsGameWorld())
+	if (GetOwner()->HasAuthority())
 	{
-		for (const TSubclassOf<USAction>& SubAction : DefaultActions)
+		const UWorld* World = GetWorld();
+
+		if (DefaultActions.Num() > 0 && !GIsCookerLoadingPackage && !GIsEditorLoadingPackage && !HasAnyFlags(RF_ClassDefaultObject) && IsValid(World) && World->IsGameWorld())
 		{
-			AddAction(GetOwner(), SubAction);
+			for (const TSubclassOf<USAction>& SubAction : DefaultActions)
+			{
+				AddAction(GetOwner(), SubAction);
+			}
 		}
 	}
 }
@@ -34,6 +42,20 @@ void USActionsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, DebugMsg);
 		}
 	}
+}
+
+bool USActionsComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
+{
+	bool bReplicated = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	for (USAction* Action : Actions)
+	{
+		if (Action)
+		{
+			bReplicated |= Channel->ReplicateSubobject(Action, *Bunch, *RepFlags);
+		}
+	}
+
+	return bReplicated;
 }
 
 bool USActionsComponent::HasAction(TSubclassOf<USAction> ActionClass) const
@@ -63,11 +85,11 @@ void USActionsComponent::AddAction(AActor* Instigator, TSubclassOf<USAction> Act
 		return;
 	}
 
-	USAction* NewAction = NewObject<USAction>(this, ActionClass, FName(FString::Printf(TEXT("%s_%d"), *ActionClass->GetName(), Actions.Num())));
+	USAction* NewAction = NewObject<USAction>(GetOwner(), ActionClass, FName(FString::Printf(TEXT("%s_%d"), *ActionClass->GetName(), Actions.Num())));
 	if (ensure(NewAction))
 	{
+		NewAction->SetActionsOwner(this);
 		Actions.Add(NewAction);
-		
 		if (NewAction->IsAutoStart() && ensureAlwaysMsgf(
 			NewAction->CanStart(Instigator), TEXT("Action %s can't be auto-started by Instigator"), *GetNameSafe(NewAction)))
 		{
@@ -82,15 +104,28 @@ void USActionsComponent::RemoveAction(USAction* Action)
 	Actions.Remove(Action);
 }
 
+void USActionsComponent::Server_StartActionByName_Implementation(AActor* Instigator, const FName& ActionName)
+{
+	StartActionByName(Instigator, ActionName);
+}
+
 bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& ActionName)
 {
+	SCOPE_CYCLE_COUNTER(STAT_SpellsTartActionByName);
 	for (USAction* Action : Actions)
 	{
 		if (Action && ActionName.IsEqual(Action->ActionName))
 		{
 			if (Action->CanStart(Instigator))
 			{
+				// Is Client?
+				if (!GetOwner()->HasAuthority())
+				{
+					Server_StartActionByName(Instigator, ActionName);
+				}
+
 				Action->StartAction(Instigator);
+
 				return true;
 			}
 
@@ -106,6 +141,11 @@ bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& Acti
 	return false;
 }
 
+void USActionsComponent::Server_StopActionByName_Implementation(AActor* Instigator, const FName& ActionName)
+{
+	StopActionByName(Instigator, ActionName);
+}
+
 bool USActionsComponent::StopActionByName(AActor* Instigator, const FName& ActionName)
 {
 	for (USAction* Action : Actions)
@@ -113,6 +153,10 @@ bool USActionsComponent::StopActionByName(AActor* Instigator, const FName& Actio
 		if (Action && ActionName.IsEqual(Action->ActionName) && Action->IsActive())
 		{
 			Action->StopAction(Instigator);
+			if (!GetOwner()->HasAuthority())
+			{
+				Server_StopActionByName(Instigator, ActionName);
+			}
 
 			return true;
 		}

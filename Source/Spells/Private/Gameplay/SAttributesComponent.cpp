@@ -11,6 +11,8 @@ static TAutoConsoleVariable<float> Spells_CVarGlobalDamageMultipler(TEXT("spells
 USAttributesComponent::USAttributesComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	SetIsReplicatedByDefault(true);
 }
 
 bool USAttributesComponent::ApplyHealthChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
@@ -26,18 +28,24 @@ bool USAttributesComponent::ApplyHealthChange(float Delta, AActor* InstigatorAct
 	}
 
 	const float OldHealth = Health;
+	const float NewHealth = FMath::Clamp(Health + Delta, 0.0f, MaxHealth);
 
-	Health = FMath::Clamp(Health + Delta, 0.0f, MaxHealth);
-	const float ActualDelta = Health - OldHealth;
+	// Only server can change health actually
+	if (GetOwner()->HasAuthority())
+	{
+		Health = NewHealth;
+	}
 
-	if (ActualDelta != 0.0f)
+	const float ActualDelta = NewHealth - OldHealth;
+
+	if (ActualDelta != 0.0f && GetOwner()->HasAuthority())
 	{
 		if (OnHealthAttributeChanged.IsBound())
 		{
-			OnHealthAttributeChanged.Broadcast(InstigatorActor, this, Health, ActualDelta, Hit);
+			OnHealthAttributeChanged.Broadcast(InstigatorActor, this, NewHealth, ActualDelta, Hit);
 		}
 
-		if (ActualDelta < 0.0f && Health == 0.0f)
+		if (ActualDelta < 0.0f && NewHealth == 0.0f)
 		{
 			if (ASpellsGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ASpellsGameModeBase>())
 			{
@@ -49,11 +57,16 @@ bool USAttributesComponent::ApplyHealthChange(float Delta, AActor* InstigatorAct
 	return ActualDelta != 0.0f;
 }
 
-void USAttributesComponent::ApplyManaChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
+bool USAttributesComponent::ApplyManaChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
 {
 	if (!GetOwner()->CanBeDamaged())
 	{
-		return;
+		return false;
+	}
+
+	if (!GetOwner()->HasAuthority())
+	{
+		return true;
 	}
 
 	const float OldMana = Mana;
@@ -67,14 +80,23 @@ void USAttributesComponent::ApplyManaChange(float Delta, AActor* InstigatorActor
 		{
 			OnManaAttributeChanged.Broadcast(InstigatorActor, this, Mana, ActualDelta, Hit);
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
-void USAttributesComponent::ApplyRageChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
+bool USAttributesComponent::ApplyRageChange(float Delta, AActor* InstigatorActor, const FHitResult& Hit)
 {
 	if (!GetOwner()->CanBeDamaged())
 	{
-		return;
+		return false;
+	}
+
+	if (!GetOwner()->HasAuthority())
+	{
+		return true;
 	}
 
 	const float OldRage = Rage;
@@ -88,5 +110,9 @@ void USAttributesComponent::ApplyRageChange(float Delta, AActor* InstigatorActor
 		{
 			OnRageAttributeChanged.Broadcast(InstigatorActor, this, Rage, ActualDelta, Hit);
 		}
+
+		return true;
 	}
+
+	return false;
 }

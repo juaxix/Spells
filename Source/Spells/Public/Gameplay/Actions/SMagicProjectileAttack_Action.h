@@ -18,11 +18,7 @@ class SPELLS_API USMagicProjectileAttack_Action : public USAction
 	GENERATED_BODY()
 
 public:
-	USMagicProjectileAttack_Action()
-		: bIsRepeatedAttack(false)
-		, bRepeatingAction(false)
-	{
-	}
+	USMagicProjectileAttack_Action();
 
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 
@@ -32,10 +28,16 @@ public:
 		bRepeatingAction = false;
 	}
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+		DOREPLIFETIME(USMagicProjectileAttack_Action, Character);
+	}
+
 	virtual void ReceiveAnimationNotif_Implementation() override;
 
 protected:
-	bool DoMagicalAttack();
+	void DoMagicalAttack();
 
 	UPROPERTY(EditAnywhere, Category = "Spells|Attack")
 	TSubclassOf<ASMagicProjectile> AttackProjectileClass;
@@ -46,7 +48,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Animation")
 	UAnimMontage* AnimMontage = nullptr;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Setup")
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Setup")
 	ACharacter* Character = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Animation")
@@ -55,6 +57,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Debug")
 	bool bDebugMode = false;
 
+	static FCollisionObjectQueryParams ObjParams;
 private:
 	UPROPERTY(Transient)
 	USkeletalMeshSocket const* SkeletalSocket = nullptr;

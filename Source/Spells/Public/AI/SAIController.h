@@ -23,6 +23,11 @@ class SPELLS_API ASAIController : public AAIController
 	GENERATED_BODY()
 	
 public:
+	ASAIController()
+	{
+		bReplicates = true;
+	}
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
