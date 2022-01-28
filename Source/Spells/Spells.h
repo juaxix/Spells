@@ -4,3 +4,4 @@
 
 #include "CoreMinimal.h"
 
+DECLARE_STATS_GROUP(TEXT("Spells_Game"), STATGROUP_SPELLS, STATCAT_Advanced);

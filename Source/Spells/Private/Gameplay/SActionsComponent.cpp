@@ -6,7 +6,10 @@
 #include "GameFramework/Character.h"
 
 // Spells game includes
+#include "Spells/Spells.h"
 #include "Gameplay/Actions/SAction.h"
+
+DECLARE_CYCLE_STAT(TEXT("Spells_StartActionByName"), STAT_SpellsTartActionByName, STATGROUP_SPELLS);
 
 void USActionsComponent::BeginPlay()
 {
@@ -84,6 +87,8 @@ void USActionsComponent::RemoveAction(USAction* Action)
 
 bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& ActionName)
 {
+	SCOPE_CYCLE_COUNTER(STAT_SpellsTartActionByName);
+
 	for (USAction* Action : Actions)
 	{
 		if (Action && ActionName.IsEqual(Action->ActionName))
