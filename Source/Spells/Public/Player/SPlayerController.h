@@ -20,6 +20,8 @@ public:
 
 	virtual void SetupInputComponent() override;
 
+	virtual void BeginPlay() override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|UI")
 	TSubclassOf<UUserWidget> InGameMenuClass;
 

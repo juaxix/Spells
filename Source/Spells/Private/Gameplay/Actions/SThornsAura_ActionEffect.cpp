@@ -45,6 +45,7 @@ void USThornsAura_ActionEffect::OnHealthChanged(AActor* InstigatorActor, USAttri
 
 		FHitResult HitBack;
 		HitBack.Location = InstigatorActor->GetActorLocation();
+
 		// return back the damage as positive
 		USGameplayBlueprintFunctions::ApplyDamage(OwningActor, InstigatorActor, FMath::Abs(ThornsDamage), HitBack);
 	}

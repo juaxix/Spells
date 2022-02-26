@@ -13,6 +13,16 @@ class SPELLS_API USAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	bool bIsLocalPlayer = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Photon Cloud")
+	bool bIsInAir = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	float CalculatedSpeed = false;
+
 protected:
 	virtual void NativeInitializeAnimation() override;
 
@@ -23,6 +33,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spells|Animation")
 	bool bIsStunned = false;
-
-
 };

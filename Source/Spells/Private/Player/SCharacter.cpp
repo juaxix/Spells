@@ -12,11 +12,18 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
+// Photon includes
+#include "PhotonCloudSubsystem.h"
+#include "PhotonJSON.h"
 
 // Spells includes
 #include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SCharacterInteractionComponent.h"
 #include "Gameplay/SAttributesComponent.h"
+#include "Online/SPhotonCloudObject.h"
+#include "Player/SAnimInstance.h"
 
 namespace
 {
@@ -31,10 +38,18 @@ namespace
 	const FName SPRIMARY_ACTION_KEY = TEXT("PrimaryAction");
 	const FName SJUMP_KEY = TEXT("Jump");
 	const FName SSPRINT_KEY = TEXT("Sprint");
+
 	constexpr float DebugDrawScale = 100.0f;
 	constexpr float DebugDrawThickness = 5.0f;
 	constexpr float DebugDrawDistance = 100.0f;
+	
 }
+
+TArray<FString> ASCharacter::AllPhotonPlayerProperties = {
+	SpellsKeysForReplication::Actions,
+	SpellsKeysForReplication::Attributes,
+	SpellsKeysForReplication::InAir
+};
 
 ASCharacter::ASCharacter()
 	: bDebugMode(false)
@@ -56,8 +71,24 @@ ASCharacter::ASCharacter()
 	bUseControllerRotationYaw = false;
 }
 
+void ASCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (!PhotonCloudObject)
+	{
+		PhotonCloudObject = Cast<USPhotonCloudObject>(GetGameInstance()->GetSubsystem<UPhotonCloudSubsystem>()->GetPhotonCloudAPI());
+	}
+	LastLocation = GetActorLocation();
+	LastRotation = GetActorRotation();
+	AnimInstance = Cast<USAnimInstance>(GetMesh()->GetAnimInstance());
+	ActionsComponent->SetupPhoton(PlayerNumber, ESInstigatorTypes::PLAYER);
+	AttributesComponent->SetupPhoton(PlayerNumber, ESInstigatorTypes::PLAYER);
+	ActionsComponent->CreateDefaultActions();
+}
+
 void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+	check(CharacterInteractionComponent);
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis(SMOVEFORWARD_AXIS, this, &ASCharacter::MoveForward);
@@ -89,27 +120,12 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributesComponent
 		{
 			DisableInput(PlayerController);
 			SetCanBeDamaged(false);
-			
-			/* TODO -- remote player health bar
-			if (IsValid(WorldHealthBar))
-			{
-				WorldHealthBar->RemoveFromParent();
-				WorldHealthBar = nullptr;
-			}*/
+			ACharacter::GetMovementComponent()->StopMovementImmediately();
 		}
 		else 
 		{
 			if (IsValid(PlayerController))
 			{
-				/* TODO -- remote player health bar
-				if (!IsValid(WorldHealthBar) && WorldHealthBarClass)
-				{
-					WorldHealthBar = CreateWidget<USWorldUserWidget>(PlayerController, WorldHealthBarClass);
-					check(WorldHealthBar);
-					WorldHealthBar->AttachedActor = this;
-					WorldHealthBar->AddToViewport();
-				}*/
-
 				if (CameraShake)
 				{
 					PlayerController->ClientStartCameraShake(CameraShake, CameraShakeScale);
@@ -135,14 +151,23 @@ void ASCharacter::SprintStop()
 	ActionsComponent->StopActionByName(this, SSPRINT_KEY);
 }
 
-#if !UE_BUILD_SHIPPING
 void ASCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	DrawDebug();
-}
+	if (!bIsLocalPlayer)
+	{
+		LagFreeRemotePlayerSync(DeltaSeconds);
+	}
+
+#if !UE_BUILD_SHIPPING
+	if (bDebugMode)
+	{
+		DrawDebug();
+	}
 #endif
+}
+
 
 void ASCharacter::PostInitializeComponents()
 {
@@ -155,7 +180,6 @@ void ASCharacter::PostInitializeComponents()
 	}
 }
 
-
 #if !UE_BUILD_SHIPPING
 void ASCharacter::DrawDebug()
 {
@@ -167,3 +191,140 @@ void ASCharacter::DrawDebug()
 	DrawDebugDirectionalArrow(GetWorld(), DrawLineStart, ControllerDirection_LineEnd, DebugDrawScale, FColor::Green, false, 0.0f, 0, DebugDrawThickness);
 }
 #endif
+
+void ASCharacter::SetupPhotonPlayer_Implementation(int32 InPlayerNumber, const FString& InPlayerName, bool bIsLocal)
+{
+	if (PlayerNumber == InPlayerNumber)
+	{
+		// already setup!
+		return;
+	}
+
+	if (!PhotonCloudObject)
+	{
+		PhotonCloudObject = Cast<USPhotonCloudObject>(GetGameInstance()->GetSubsystem<UPhotonCloudSubsystem>()->GetPhotonCloudAPI());
+	}
+
+	PlayerNumber = InPlayerNumber;
+	PlayerName = InPlayerName;
+	bIsLocalPlayer = bIsLocal;
+
+	AnimInstance = Cast<USAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance)
+	{
+		AnimInstance->bIsLocalPlayer = bIsLocalPlayer;
+	}
+
+	if (bIsLocalPlayer)
+	{
+		FTimerManager& TimerManager = GetWorldTimerManager();
+		TimerManager.ClearTimer(ReplicationTimerHandle);
+		ReplicationTimerDelegate.Unbind();
+		ReplicationTimerDelegate.BindUObject(this, &ASCharacter::Replicate_Movement, false);
+		TimerManager.SetTimer(ReplicationTimerHandle, ReplicationTimerDelegate, PhotonCloudObject->Player_SyncFreq, true);
+		ActionsComponent->SetupPhoton(PlayerNumber, ESInstigatorTypes::PLAYER);
+		AttributesComponent->SetupPhoton(PlayerNumber, ESInstigatorTypes::PLAYER);
+		ActionsComponent->CreateDefaultActions();
+		
+	}
+	else
+	{
+		CharacterInteractionComponent->DestroyComponent();
+	}
+}
+
+void ASCharacter::ReceivedPlayerProperties_Implementation(UPhotonJSON* ChangesJSON)
+{
+	if (IsValid(ChangesJSON))
+	{
+		if (IsValid(AnimInstance) && ChangesJSON->Contains(SpellsKeysForReplication::InAir))
+		{
+			AnimInstance->bIsInAir = ChangesJSON->GetBoolean(SpellsKeysForReplication::InAir);
+		}
+
+		if (ChangesJSON->Contains(SpellsKeysForReplication::Actions))
+		{
+			ActionsComponent->OnActionsPropertiesChanged(ChangesJSON->Get_JSON_Object(SpellsKeysForReplication::Actions));
+		}
+
+		if (ChangesJSON->Contains(SpellsKeysForReplication::Attributes))
+		{
+			AttributesComponent->OnAttributesPropertiesChanged(ChangesJSON->Get_JSON_Object(SpellsKeysForReplication::Attributes));
+		}
+	}
+}
+
+void ASCharacter::ReceivedPlayerLocationRotationControl_Implementation(const FVector& InLocation, const FRotator& InRotation, const FRotator& InControlRot)
+{
+	LastLocation = InLocation;
+	LastRotation = InRotation;
+	LastControlRot = InControlRot;
+	LastMovementReceived = GetWorld()->TimeSeconds;
+}
+
+void ASCharacter::ReceivedPlayerData_Implementation(UPhotonJSON* InDataJSON)
+{
+	if (!InDataJSON)
+	{
+		return;
+	}
+
+	if (InDataJSON->Contains(SpellsKeysForReplication::ActionEvent))
+	{
+		ActionsComponent->OnActionsPropertiesChanged(InDataJSON->Get_JSON_Object(SpellsKeysForReplication::ActionEvent));
+	}
+}
+
+void ASCharacter::Replicate_Movement(bool bForce)
+{
+	const FVector Location = GetActorLocation();
+	const FRotator Rotation = GetActorRotation();
+	const FRotator ControlRot = GetControlRotation();
+
+	if (bForce ||
+		!Location.Equals(LastLocation, 1.0f) ||
+		!Rotation.Equals(LastRotation, 0.1f) ||
+		!ControlRot.Equals(LastControlRot, 0.2f))
+	{
+		static TArray<int32> NoTarget;
+		LastLocation = Location;
+		LastRotation = Rotation;
+		LastControlRot = ControlRot;
+		PhotonCloudObject->SendPlayerLocationRotationScale(LastLocation, LastRotation, LastControlRot.Euler(), NoTarget, false);
+	}
+
+	if (bForce || AnimInstance->bIsInAir != bLastIsInAir)
+	{
+		bLastIsInAir = AnimInstance->bIsInAir;
+		UPhotonJSON* JumpJSON = UPhotonJSON::Create(this);
+		JumpJSON->SetBoolean(SpellsKeysForReplication::InAir, bLastIsInAir);
+		PhotonCloudObject->SetPlayerCustomProperties(JumpJSON);
+	}
+}
+
+void ASCharacter::LagFreeRemotePlayerSync(float DeltaSeconds)
+{
+	static const float LastMovementTimeout = PhotonCloudObject->Player_SyncFreq * 3;
+	if (LastMovementReceived > 0)
+	{
+		if (GetWorld()->TimeSeconds - LastMovementReceived < LastMovementTimeout)
+		{
+			const float DeltaTime = DeltaSeconds * PhotonCloudObject->GetRoundTripTime();
+			const FVector Location = GetActorLocation();
+			if (AnimInstance)
+			{
+				AnimInstance->CalculatedSpeed = FVector::Dist(Location, LastLocation) / PhotonCloudObject->Player_SyncFreq;
+			}
+			SetActorLocation(UKismetMathLibrary::VLerp(Location, LastLocation, DeltaTime));
+			SetActorRotation(UKismetMathLibrary::RLerp(GetActorRotation(), LastRotation, DeltaTime, true));
+		}
+		else
+		{
+			LastMovementReceived = 0.0f;
+			if (AnimInstance)
+			{
+				AnimInstance->CalculatedSpeed = 0.0f;
+			}
+		}
+	}
+}

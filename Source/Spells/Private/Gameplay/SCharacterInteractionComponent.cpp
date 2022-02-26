@@ -126,3 +126,13 @@ void USCharacterInteractionComponent::OnFocusing(AActor* NewTargetActor)
 		InteractionUserWidget->AttachedActor = TargetActor;
 	}
 }
+
+void USCharacterInteractionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (InteractionUserWidget)
+	{
+		InteractionUserWidget->RemoveFromParent();
+	}
+
+	Super::EndPlay(EndPlayReason);
+}

@@ -34,8 +34,12 @@ public:
 
 	virtual void ReceiveAnimationNotif_Implementation() override;
 
+	virtual void OnPropertiesChanged_Implementation(const UPhotonJSON* InActionJSON) override;
+
 protected:
-	bool DoMagicalAttack();
+	void Owner_DoMagicalAttack();
+
+	void SpawnMagicProjectile(const FVector& Location, const FRotator& Rotation);
 
 	UPROPERTY(EditAnywhere, Category = "Spells|Attack")
 	TSubclassOf<ASMagicProjectile> AttackProjectileClass;

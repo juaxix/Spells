@@ -10,6 +10,10 @@
 
 #include "SpellsGameModeBase.generated.h"
 
+class ASCharacter;
+class ASPickableBase;
+class UPhotonJSON;
+class USPhotonCloudObject;
 class ASAICharacter;
 class UDataTable;
 class USEnemyDataAsset;
@@ -50,11 +54,25 @@ class SPELLS_API ASpellsGameModeBase : public AGameModeBase
 public:
 	ASpellsGameModeBase();
 
+	virtual void RestartPlayer(AController* NewPlayer) override;
+
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	virtual void StartPlay() override;
 
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Photon Cloud")
+	void OnCustomRoomPropertiesChanged(UPhotonJSON* RoomPropertiesJSON);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Photon Cloud")
+	void OnNewMaster(int32 OldMasterPlayerNumber, int32 NewMasterPlayerNumber);
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Photon Cloud")
+	void ReplicateCharacterPickedSomething(ASCharacter* PickerCharacter, ASPickableBase* Pickable, bool bRemoveRoomProperty = false);
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Photon Cloud")
+	ASPickableBase* MasterSpawnPickable(TSubclassOf<ASPickableBase> SpawnPickableClass, const FVector& SpawnLocation);
 
 	UFUNCTION(BlueprintCallable, Category = "Spells|Gameplay")
 	void OnActorKilled(AActor* Killed, AActor* Killer);
@@ -62,7 +80,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spells|SaveGame")
 	void WriteSaveGame();
 
+	UFUNCTION(BlueprintCallable, Category = "Spells|SaveGame")
 	void LoadSaveGame();
+
+	UFUNCTION(BlueprintPure, Category = "Spells|SaveGame")
+	AActor* FindMasterControlledActor(int32 ActorUniqueId);
+
+	UFUNCTION(BlueprintPure, Category = "Spells|SaveGame")
+	ASPickableBase* FindMasterControlledPickable(int32 PickableUniqueId);
+
+	UFUNCTION(BlueprintPure, Category = "Spells|Enemies")
+	const TMap<int32, ASAICharacter*>& GetEnemies() const{ return SpawnedEnemies; }
+
+	void OnReceivedActorLocationRotation(const int64& HashedName, const FVector& NewLocation, const FRotator& NewRotation);
+
+	void OnReceivedActorData(const int64& InHashedName, UPhotonJSON* ActorData);
 
 protected:
 	UFUNCTION(BlueprintPure, Category = "Spells|Enemies")
@@ -78,9 +110,21 @@ protected:
 	UFUNCTION(Exec, Category = "Spells|Enemies")
 	void KillAllEnemies();
 
-	void OnAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVector SpawnLocation);
+protected:
+
+	bool OnCustomRoomEnemiesPropertyChanged(const FString& EnemyPropertyName, UPhotonJSON* RoomEnemyPropertyJSON);
+
+	void ClientSpawnEnemy(int32 EnemyUniqueId, const UPhotonJSON* EnemyJSON);
+
+	void OnEnemyAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVector SpawnLocation, int32 EnemyUniqueId);
 
 	void SpawnEnemyTimerElapsed();
+
+	ASPickableBase*  ClientSpawnPickable(int32 PickableUniqueId, const UPhotonJSON* PickableJSON);
+
+	void OnMasterControlGameMode();
+
+	void OnClientRebuildGameMode();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Spells|Enemies Spawning", meta = (AllowPrivateAccess = "true"))
 	float SpawnEnemyTimerInterval = 30.0f;
@@ -92,10 +136,10 @@ protected:
 	UCurveFloat* SpawnEnemyInTimeCurve = nullptr;
 	
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Enemies Spawning", meta = (AllowPrivateAccess = "true"))
-	TArray<ASAICharacter*> SpawnedEnemies;
+	TMap<int32, ASAICharacter*> SpawnedEnemies;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Spells|Pickables", meta = (AllowPrivateAccess = "true"))
-	TArray<TSubclassOf<class ASPickableBase>> SpawnPickableClasses;
+	TArray<TSubclassOf<ASPickableBase>> SpawnPickableClasses;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Spells|Pickables", meta = (AllowPrivateAccess = "true"))
 	UEnvQuery* SpawnPickableQuery = nullptr;
@@ -107,7 +151,7 @@ protected:
 	float SpawnPickableMinDistance = 500.0f;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|Pickables", meta = (AllowPrivateAccess = "true"))
-	TArray<ASPickableBase*> SpawnedPickables;
+	TMap<int32, ASPickableBase*> SpawnedPickables;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Spells|Character Spawning", meta = (AllowPrivateAccess = "true"))
 	float RespawnPlayerTime = 6.0f;
@@ -123,6 +167,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Enemies Spawning")
 	UDataTable* EnemiesDataTable = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Photon Cloud")
+	USPhotonCloudObject* PhotonCloudObject = nullptr;
+
+	int32 CurrentActorNetIdCount = -1;
+	int32 CurrentEnemyNetIdCount = -1;
+	int32 CurrentPickableNetIdCount = -1;
 
 	FTimerHandle TimerHandle_SpawnEnemies;
 };

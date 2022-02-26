@@ -6,6 +6,8 @@
 #include "AIController.h"
 #include "SAIController.generated.h"
 
+class USPhotonCloudObject;
+
 namespace SpellsAIController
 {
 	const FName STARGET_ACTOR_BB_KEY = TEXT("TargetActor");
@@ -25,6 +27,8 @@ class SPELLS_API ASAIController : public AAIController
 public:
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	UFUNCTION(BlueprintCallable, Category = "Spells|AI|Target")
 	bool SetCurrentTargetActor(AActor* InActor);
 
@@ -38,8 +42,22 @@ public:
 	FVector GetCurrentTargetLocation() const;
 
 protected:
+	UFUNCTION()
+	void OnPhotonMasterPlayerChanged(int32 OldMasterPlayerNumber, int32 NewMasterPlayerNumber)
+	{
+		SetupBehavior();
+	}
+
+	void SetupBehavior();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|AI")
-	UBehaviorTree* DefaultBehaviorTree = nullptr;
+	UBehaviorTree* MasterBehaviorTree = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|AI")
+	UBehaviorTree* ClientBehaviorTree = nullptr;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	USPhotonCloudObject* PhotonCloudObject = nullptr;
 
 	uint8 MoveToLocationBBKeyID = 0;
 	uint8 MoveToActorBBKeyID = 0;

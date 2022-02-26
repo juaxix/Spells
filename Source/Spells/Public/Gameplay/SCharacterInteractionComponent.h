@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "UI/SWorldUserWidget.h"
 #include "SCharacterInteractionComponent.generated.h"
 
 class USWorldUserWidget;
@@ -28,6 +29,8 @@ protected:
 	}
 
 	virtual void OnFocusing(AActor* NewTargetActor);
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Setup")

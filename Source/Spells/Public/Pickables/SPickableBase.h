@@ -2,8 +2,11 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+// Spells includes
 #include "Gameplay/SPickableInterface.h"
 
 #include "SPickableBase.generated.h"
@@ -24,6 +27,9 @@ public:
 		DecorationStaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DecorationStaticMesh"));
 		DecorationStaticMesh->SetupAttachment(RootComponent);
 	}
+
+	UPROPERTY(Category = "Spells|Photon Cloud", VisibleAnywhere, BlueprintReadOnly)
+	int32 PickableUniqueId = -1;
 
 protected:
 	UPROPERTY(Category = "Spells|Setup", VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Mesh,Rendering,Physics,Components|StaticMesh", AllowPrivateAccess = "true"))
@@ -55,4 +61,5 @@ protected:
 
 	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true", Tooltip = "List of effects to be removed from the character picking this item"))
 	TArray<TSubclassOf<USActionEffect>> ActionEffectsRemoved;
+
 };

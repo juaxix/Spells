@@ -13,8 +13,11 @@
 
 #include "SCharacter.generated.h"
 
+class USAnimInstance;
+class UPhotonJSON;
 class USCharacterInteractionComponent;
 class USpringArmComponent;
+class USPhotonCloudObject;
 class UCameraComponent;
 
 UCLASS(BlueprintType, Blueprintable)
@@ -24,6 +27,8 @@ class SPELLS_API ASCharacter : public ACharacter
 
 public:
 	ASCharacter();
+	
+	virtual void BeginPlay() override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -58,6 +63,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Spells|Player|Attributes") FORCEINLINE
 	USAttributesComponent* GetAttributesComponent() const {return AttributesComponent;}
 
+	UFUNCTION(BlueprintPure, Category = "Spells|Player|Actions") FORCEINLINE
+	USActionsComponent* GetActionsComponent() const {return ActionsComponent;}
+
 	/** 
 	* Make the character sprint on the next update.	 
 	*/
@@ -70,9 +78,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Spells|Character")
 	virtual void SprintStop();
 
-#if !UE_BUILD_SHIPPING
 	virtual void Tick(float DeltaSeconds) override;
-#endif
 
 	virtual void PostInitializeComponents() override;
 
@@ -110,17 +116,36 @@ public:
 #endif
 
 	UFUNCTION(Exec)
-	virtual void HealSelf()
+	virtual void HealSelf(float Delta)
 	{
 #if !UE_BUILD_SHIPPING
 		AttributesComponent->ApplyHealthChange(
-			AttributesComponent->GetMaximumHealth()-AttributesComponent->GetCurrentHealth(), 
+			Delta, 
 			this, FHitResult());
 #else
 		UE_LOG(LogTemp, Log, TEXT("Disabled"));
 #endif
 	}
 
+	UFUNCTION(BlueprintNativeEvent)
+	void SetupPhotonPlayer(int32 InPlayerNumber, const FString& InPlayerName, bool bInIsLocal);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ReceivedPlayerLocationRotationControl(const FVector& InLocation, const FRotator& InRotation, const FRotator& InControlRot);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ReceivedPlayerProperties(UPhotonJSON* InChangesJSON);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ReceivedPlayerData(UPhotonJSON* InDataJSON);
+
+	void Replicate_Movement(bool bForce = false);
+
+protected:
+	void LagFreeRemotePlayerSync(float DeltaSeconds);
+
+	FTimerHandle ReplicationTimerHandle;
+	FTimerDelegate ReplicationTimerDelegate;
 public:
 	UPROPERTY(VisibleAnywhere, Category = "Spells|Player")
 	UCameraComponent* CameraComponent = nullptr;
@@ -155,17 +180,39 @@ public:
 	UPROPERTY(Category = "Spells|Setup", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", ToolTip = "Fraction of the damage done to other actors converted into my Mana"))
 	float DamageDoneToManaFraction = 0.3f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	bool bIsLocalPlayer = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FString PlayerName = TEXT("Local Player");
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	int32 PlayerNumber = -1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	USPhotonCloudObject* PhotonCloudObject = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FVector LastLocation = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FRotator LastRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FRotator LastControlRot = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	bool bLastIsInAir = false;
+
+	UPROPERTY(Transient)
+	USAnimInstance* AnimInstance = nullptr;
+
+	float LastMovementReceived = 0.0f;
+
 	const FName MagicMissileActionName = TEXT("MagicMissile");
 	const FName TeleportActionName = TEXT("Teleport");
 	const FName BlackholeActionName = TEXT("Blackhole");
 	const FName CounterSpellActionName = TEXT("CounterSpell");
 
-	/* TODO -- remote player health bar
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "UI")
-	USWorldUserWidget* WorldHealthBar = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UUserWidget> WorldHealthBarClass = nullptr;
-	*/
-
+	static TArray<FString> AllPhotonPlayerProperties;
 };

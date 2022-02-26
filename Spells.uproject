@@ -12,7 +12,8 @@
 				"Engine",
 				"AIModule",
 				"UMG",
-				"CoreUObject"
+				"CoreUObject",
+				"PhotonCloudAPI"
 			]
 		}
 	],
@@ -103,6 +104,46 @@
 				"Mac",
 				"Win64"
 			]
+		},
+		{
+			"Name": "PhotonCloudAPI",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/76bee07c672c4dbba14df190d82f7f33"
+		},
+		{
+			"Name": "OnlineSubsystemNull",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemIOS",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"IOS",
+				"TVOS"
+			]
+		},
+		{
+			"Name": "OnlineSubsystemGooglePlay",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Android"
+			]
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": false
+		},
+		{
+			"Name": "SubversionSourceControl",
+			"Enabled": false
+		},
+		{
+			"Name": "PlasticSourceControl",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [

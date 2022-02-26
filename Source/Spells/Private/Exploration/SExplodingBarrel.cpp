@@ -6,6 +6,11 @@
 #include "DrawDebugHelpers.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
+// Photon includes
+#include "PhotonReplicator.h"
+#include "PhotonCloudAPIBPLibrary.h"
+#include "PhotonCloudSubsystem.h"
+
 // Spells includes
 #include "Gameplay/Attacks/SMagicProjectile.h"
 
@@ -20,12 +25,21 @@ ASExplodingBarrel::ASExplodingBarrel()
 	RadialForceComponent->bImpulseVelChange = true;
 	RadialForceComponent->AddCollisionChannelToAffect(ECC_WorldDynamic);
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
+
+	PhotonReplicatorComponent = CreateDefaultSubobject<UPhotonReplicator>(TEXT("PhotonReplicator"));
+	PhotonReplicatorComponent->OwnerRole = EPhotonReplicatorOwnerRoles::MASTER;
+	PhotonReplicatorComponent->LocationReplication = EPhotonReplicateAxis::XYZ;
+	PhotonReplicatorComponent->RotationReplication = EPhotonReplicateAxis::XYZ;
 }
 
 void ASExplodingBarrel::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	GetStaticMeshComponent()->OnComponentHit.AddDynamic(this, &ASExplodingBarrel::OnBarrelHit);
+	if (PhotonReplicatorComponent->RequestOwnership())
+	{
+		PhotonReplicatorComponent->GetPhotonCloudRef()->OnPlayerJoinedRoom.AddDynamic(this, &ASExplodingBarrel::OnPlayerEnterSyncBarrel);
+	}
 }
 
 void ASExplodingBarrel::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -38,9 +52,20 @@ void ASExplodingBarrel::OnBarrelHit_Implementation(UPrimitiveComponent* HitCompo
 {
 	if (const ASMagicProjectile* MagicProjectile = Cast<ASMagicProjectile>(OtherActor))
 	{
-		RadialForceComponent->FireImpulse();
-
+		if (PhotonReplicatorComponent->IsMine())
+		{
+			RadialForceComponent->FireImpulse();
+		}
+		
 		const FString DebugString = FString::Printf(TEXT("Hit from %s at %s"), MagicProjectile->GetInstigator() ? *MagicProjectile->GetInstigator()->GetName() : TEXT("Unknown"), *Hit.Location.ToString());
 		DrawDebugString(GetWorld(), Hit.ImpactPoint, DebugString, nullptr, FColor::Yellow, 2.0f, true, 1);
+	}
+}
+
+void ASExplodingBarrel::OnPlayerEnterSyncBarrel(int32 InPlayerNumber, FString InPlayerName, bool InIsLocalPlayer)
+{
+	if (PhotonReplicatorComponent->IsMine())
+	{
+		PhotonReplicatorComponent->SendReplicationData(true);
 	}
 }

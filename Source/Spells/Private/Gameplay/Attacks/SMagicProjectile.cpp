@@ -41,7 +41,7 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 		USActionsComponent* ActionsComponent = Cast<USActionsComponent>(OtherActor->GetComponentByClass(USActionsComponent::StaticClass()));
 		if (IsValid(ActionsComponent) && ActionsComponent->ActiveGameplayTags.HasTag(CounterSpellTag))
 		{
-			ProjectileMovementComponent->Velocity = -ProjectileMovementComponent->Velocity/2.0f; // this also inverts the rotation
+			ProjectileMovementComponent->Velocity = -ProjectileMovementComponent->Velocity / 2.0f; // this also inverts the rotation
 			SetInstigator(Cast<APawn>(OtherActor));
 			SetActionEffectClasses(ActionsComponent->GetCounterSpellActionEffectClasses(), true);
 
@@ -57,6 +57,8 @@ void ASMagicProjectile::OnSphereActorOverlap_Implementation(UPrimitiveComponent*
 				{
 					ActionsComponent->AddAction(ThisInstigator, ActionEffect);
 				}
+
+				ActionsComponent->SyncActions();
 			}
 		}
 	}

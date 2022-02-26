@@ -2,22 +2,62 @@
 
 #include "AI/SAIController.h"
 
+// Unreal includes
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Kismet/GameplayStatics.h"
+
+// Photon includes
+#include "PhotonCloudSubsystem.h"
+
+// Spells includes
+
+#include "Online/SPhotonCloudObject.h"
 
 void ASAIController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (PhotonCloudObject)
+	{
+		SetupBehavior();
+		PhotonCloudObject->OnMasterChanged.AddDynamic(this, &ASAIController::OnPhotonMasterPlayerChanged);
+	}
+}
 
+void ASAIController::SetupBehavior()
+{
 	// cache blackboard key+vars
+	UBehaviorTree* DefaultBehaviorTree = PhotonCloudObject && PhotonCloudObject->AmIMaster() ? MasterBehaviorTree : ClientBehaviorTree;
 	if (ensureMsgf(DefaultBehaviorTree, TEXT("Behavior Tree is not set; Please assign it for this AI Controller %s"), *GetName()))
 	{
 		RunBehaviorTree(DefaultBehaviorTree);
-		const UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
-		MoveToActorBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_ACTOR_BB_KEY);
-		MoveToLocationBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_LOCATION_BB_KEY);
+		if (const UBlackboardComponent* BlackboardComponent = GetBlackboardComponent())
+		{
+			MoveToActorBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_ACTOR_BB_KEY);
+			MoveToLocationBBKeyID = BlackboardComponent->GetKeyID(SpellsAIController::STARGET_LOCATION_BB_KEY);
+		}
+	}
+}
+
+void ASAIController::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (const UWorld* World = GetWorld())
+	{
+#if WITH_EDITOR
+		if (World->WorldType == EWorldType::Editor || World->WorldType == EWorldType::EditorPreview)
+		{
+			return;
+		}
+#endif
+		// cache our Spells version of the photon cloud object pointer
+		if (const UPhotonCloudSubsystem* PhotonSubsystem = World->GetGameInstance()->GetSubsystem<UPhotonCloudSubsystem>())
+		{
+			PhotonCloudObject = Cast<USPhotonCloudObject>(PhotonSubsystem->GetPhotonCloudAPI());
+		}
 	}
 }
 

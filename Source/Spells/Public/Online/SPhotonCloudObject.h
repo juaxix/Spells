@@ -1,0 +1,142 @@
+// Spells - xixgames - juaxix - 2021/2022
+
+#pragma once
+
+// Unreal includes
+#include "CoreMinimal.h"
+
+// Photon includes
+#include "PhotonCloudObject.h"
+
+#include "SPhotonCloudObject.generated.h"
+
+class ASCharacter;
+
+namespace SpellsKeysForReplication
+{
+	static constexpr const TCHAR* InAir = TEXT("a");
+	static constexpr const TCHAR* Actions = TEXT("ac");
+	static constexpr const TCHAR* ActionActive = TEXT("aa");
+	static constexpr const TCHAR* ActionClassName = TEXT("acn");
+	static constexpr const TCHAR* ActionUniqueNetId = TEXT("aid");
+	static constexpr const TCHAR* ActionEvent = TEXT("ae");
+	static constexpr const TCHAR* InstigatorType = TEXT("it");
+	static constexpr const TCHAR* InstigatorUniqueId = TEXT("iui");
+	static constexpr const TCHAR* SpawnProjectile = TEXT("sp");
+	static constexpr const TCHAR* ProjectileLocation = TEXT("prl");
+	static constexpr const TCHAR* ProjectileRotation = TEXT("prr");
+	static constexpr const TCHAR* RespawnPlayer = TEXT("rp");
+	static constexpr const TCHAR* Attributes = TEXT("at");
+	static constexpr const TCHAR* HealthAttribute = TEXT("ha");
+	static constexpr const TCHAR* ManaAttribute = TEXT("ma");
+	static constexpr const TCHAR* RageAttribute = TEXT("ra");
+	static constexpr const TCHAR* EnemiesPrefix = TEXT("e_");
+	static constexpr const TCHAR* EnemiesActionsPrefix = TEXT("eac_");
+	static constexpr const TCHAR* EnemiesActionsEventPrefix = TEXT("eace_");
+	static constexpr const TCHAR* EnemiesAttributesPrefix = TEXT("eat_");
+	static constexpr const TCHAR* EnemyAssetId = TEXT("eai");
+	static constexpr const TCHAR* EnemyLocation = TEXT("el");
+	static constexpr const TCHAR* PickablesPrefix = TEXT("pi_");
+	static constexpr const TCHAR* PickableLocation = TEXT("pil");
+	static constexpr const TCHAR* PickableClassId = TEXT("pic");
+	static constexpr const TCHAR* PickableClassName = TEXT("picn");
+	static constexpr const TCHAR* PickableIsPicked = TEXT("pib");
+	static constexpr const TCHAR* PickablePicker = TEXT("pip");
+	static constexpr const TCHAR* PickableEventPrefix = TEXT("pie_");
+	static constexpr const TCHAR* GameModeStartTime = TEXT("st"); // used in bps
+	static constexpr const TCHAR* GamePlayFlags = TEXT("GamePlayFlags");
+}
+
+UENUM(BlueprintType)
+enum class ESInstigatorTypes : uint8
+{
+	INVALID,
+	PLAYER,
+	MASTER_AI
+};
+
+/**
+ * Static object living in the PhotonCloud subsystem during all the game life
+ */
+UCLASS(BlueprintType)
+class SPELLS_API USPhotonCloudObject : public UPhotonCloudObject
+{
+	GENERATED_BODY()
+
+public:
+	void CreateAllCharactersFromPhotonPlayers();
+	
+	void playerJoinedRoom(int32 PlayerNumber, const ExitGames::Common::JString& PlayerName, bool bIsLocal) override
+	{
+		Super::playerJoinedRoom(PlayerNumber, PlayerName, bIsLocal);
+		OnSpawnCharacter(PlayerNumber, UTF8_TO_TCHAR(PlayerName.UTF8Representation().cstr()), bIsLocal);
+		SyncLocalPlayer();
+	}
+
+	void playerLeftRoom(int32 PlayerNumber) override
+	{
+		Super::playerLeftRoom(PlayerNumber);
+		OnDestroyCharacter(PlayerNumber);
+	}
+
+	// we are going to use the scale as the controller rotation (trick)
+	void receivedPlayerLocationRotationScale(int32 PlayerNumber, const FVector& Location, const FRotator& Rotation, const FVector& Scale) override;
+
+	void playerCustomPropertiesChange(int32 playerNumber, UPhotonJSON* changesJSON) override;
+
+	void receivedUserData(int32 PlayerNumber, UPhotonJSON* DataJSON) override;
+
+	void roomCustomRoomPropertiesChanged(UPhotonJSON* ChangedProperties) override;
+
+	void masterChanged(int32 OldMasterPlayerNumber, int32 NewMasterPlayerNumber) override;
+
+	void receivedActorLocationRotation(int32 SenderPlayerNumber, const int64& HashedName, const FVector& Location, const FRotator& Rotation) override;
+
+	void receivedSerializedActorData(int32 SenderPlayerNumber, const int64& HashedName, UPhotonJSON* Data) override;
+
+	void OnWorldChanged(UWorld* World, UWorld* NewWorld)
+	{
+		if (NewWorld && GetState() == EPhotonCloudStates::JOINED)
+		{
+			CreateAllCharactersFromPhotonPlayers();
+			SyncLocalPlayer();
+		}
+	}
+
+	/**
+	 * Using the input instigator actor, will determine the type of gameplay actor
+	 * and sets the PlayerNumber from the Character or the unique id of the AI Character accordingly.
+	 * @param InInstigator the actor to analyze
+	 * @param InstigatorType will contain the type of the passed instigator depending on the Photon auth role. It will be invalid if the instigator is also invalid
+	 * @param InstigatorUniqueId in case the instigator is a local or remote player, or in case the instigator is a master controlled AI character or actor in the scene
+	 */
+	UFUNCTION(BlueprintPure, Category = "Spells|Photon Cloud")
+	void GetInstigatorUniqueId(AActor* InInstigator, ESInstigatorTypes& InstigatorType, UPARAM(ref) int32& InstigatorUniqueId) const;
+
+	/**
+	 * Given an instigator type and its unique id ,it will return the instance of the object
+	 * @param InstigatorType generated by @see GetInstigatorUniqueId
+	 * @param UniqueId is the player number in case the type is local or remote player or an actor unique id (AICharacter or other master controlled objects)
+	 * @return AActor pointer to the instigator
+	 */
+	UFUNCTION(BlueprintPure, Category = "Spells|Photon Cloud")
+	AActor* FindInstigatorWithUniqueId(ESInstigatorTypes InstigatorType, int32 UniqueId);
+
+protected:
+	void OnSpawnCharacter(int32 PlayerNumber, const FString& PlayerName, bool bIsLocal);
+
+	void OnDestroyCharacter(int32 PlayerNumber);
+
+	void SyncLocalPlayer();
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category  = "Spells|Photon Cloud", meta = (ClampMin = 0.001f, ClampMax = 1.0f, UIMin = "0.001", UIMax = "1.0", Tooltip = "Player syncronization frequency in s, will affect messages/second"))
+	float Player_SyncFreq = 0.04f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category  = "Spells|Photon Cloud", meta = (ClampMin = 0.001f, ClampMax = 1.0f, UIMin = "0.001", UIMax = "1.0", Tooltip = "Master AIs syncronization frequency in s, will affect messages/second"))
+	float AI_SyncFreq = 0.06f;
+
+	UPROPERTY(Transient)
+	TMap<int32, ASCharacter*> JoinedCharacters;
+
+	bool bLoadingMap = false;
+};

@@ -22,7 +22,10 @@ class SPELLS_API USAction : public UObject
 
 public:
 	USAction() : bIsActive(false) , bAutoStart(false) { }
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Spells|Actions")
+	void SetActionsOwner(USActionsComponent* InActionsComponent, int32 InActionNetId);
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Spells|Actions")
 	void StartAction(AActor* Instigator);
 
@@ -34,7 +37,7 @@ public:
 	virtual void ReceiveAnimationNotif_Implementation(){}
 
 	UFUNCTION(BlueprintPure, Category = "Spells|Actions")
-	USActionsComponent* GetOwningComponent() const;
+	USActionsComponent* GetOwningComponent() const{ return OwningActionsComponent; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Spells|Actions")
 	bool CanStart(AActor* Instigator);
@@ -49,15 +52,22 @@ public:
 	UFUNCTION(BlueprintPure, Category  = "Spells|Actions")
 	bool IsAutoStart() const { return bAutoStart; }
 
-	virtual UWorld* GetWorld() const override
-	{
-		if (UActorComponent* ActorComponent = Cast<UActorComponent>(GetOuter()))
-		{
-			return ActorComponent->GetWorld();
-		}
+	UFUNCTION(BlueprintNativeEvent, Category  ="Spells|Photon Cloud")
+	void OnPropertiesChanged(const UPhotonJSON* InActionJSON);
 
-		return nullptr;
-	}
+	// Generate a JSON with the minimum amount of data needed to build this action in a replicated USActionscomponent
+	// using ActionClassName
+	UFUNCTION(BlueprintNativeEvent, Category  ="Spells|Photon Cloud")
+	UPhotonJSON* ToPhotonJSON() const;
+
+	// Once the action is built in the replicated side, the only data needed for the action state change is generated to be synced
+	// using the instigator
+	UFUNCTION(BlueprintPure, Category = "Spells|Photon Cloud")
+	UPhotonJSON* GetActionStateJSON(AActor* Instigator);
+
+	// it will send this action state using GetActionStateJSON method using the owning component
+	UFUNCTION(BlueprintCallable, Category  ="Spells|Photon Cloud")
+	void ReplicateActionState(AActor* Instigator);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|Tags", meta = (Tooltip = "Tags added to the owning actor when activated, removed when the action stops"))
 	FGameplayTagContainer GrantTags;
@@ -69,6 +79,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions")
 	FName ActionName;
 
+	/* Action unique network name */
+	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions")
+	int32 ActionNetId = -1;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|UI")
 	TSoftObjectPtr<UTexture2D> Icon;
 	
@@ -78,4 +92,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spells|Actions", meta = (AllowPrivateAccess = "true"))
 	uint8 bAutoStart:1;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Spells|Actions")
+	USActionsComponent* OwningActionsComponent = nullptr;
 };

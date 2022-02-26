@@ -2,10 +2,14 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
+#include "PhotonCloudObject.h"
 #include "Engine/StaticMeshActor.h"
+
 #include "SExplodingBarrel.generated.h"
 
+class UPhotonReplicator;
 class URadialForceComponent;
 
 /**
@@ -28,8 +32,13 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Exploding Barrel")
 	void OnBarrelHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnPlayerEnterSyncBarrel(int32 InPlayerNumber, FString InPlayerName, bool InIsLocalPlayer);
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Explosion")
 	URadialForceComponent* RadialForceComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Spells|Photon Cloud")
+	UPhotonReplicator* PhotonReplicatorComponent = nullptr;
 };

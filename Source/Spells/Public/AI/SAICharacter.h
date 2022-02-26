@@ -2,11 +2,18 @@
 
 #pragma once
 
+// Unreal includes
 #include "CoreMinimal.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/Character.h"
+
+// Photon includes
+#include "PhotonMechanics.h"
+
 #include "SAICharacter.generated.h"
 
+class USPhotonCloudObject;
+class UPhotonJSON;
 /**
  * Pawn sensing is the basic (original) version of the AI perception
  */
@@ -27,7 +34,7 @@ enum class ESAIAggroLevels : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSOnEnemyAggroChanged, AActor*, InstigatorActor, ESAIAggroLevels, AggroLevel);
 
 UCLASS()
-class SPELLS_API ASAICharacter : public ACharacter
+class SPELLS_API ASAICharacter : public ACharacter, public IPhotonMechanics
 {
 	GENERATED_BODY()
 
@@ -53,8 +60,29 @@ public:
 		}
 	}
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Photon Cloud")
+	void OnEventReplicated(const UPhotonJSON* EventJSON);
+
+	UFUNCTION(BlueprintPure, Category = "Spells|AI|Animation")
+	float GetCurrentSpeed() const;
+
+	virtual void GetHashedName_Implementation(int64& OutHashedName) const override{ OutHashedName = HashedName; }
+
+	void OnReceivedActorLocationRotation(const FVector& NewLocation, const FRotator& NewRotation);
+
+	void SetupPhoton(USPhotonCloudObject* InPhotonCloudObject, int32 EnemyUniqueId);
+
+
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void BeginDestroy() override;
+
+	void SyncMovementReplication(bool bForce = false);
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	virtual void LagFreeMovementSync(float DeltaSeconds);
 
 	UFUNCTION()
 	virtual void OnPawnInSight(APawn* InPawn);
@@ -71,6 +99,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spells|Projectile")
 	bool bOverrideProjectileEffects = true;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Spells|Photon Cloud")
+	int32 AIUniqueId = -1;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Spells|Photon Cloud")
+	int64 HashedName = -1;
 
 protected:
 	UPROPERTY(Transient)
@@ -102,4 +136,19 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Debug", meta = (AllowPrivateAccess = "true"))
 	uint8 bDebug:1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	USPhotonCloudObject* PhotonCloudObject = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FVector LastLocation = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	FRotator LastRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	float LastMovementSync = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spells|Photon Cloud")
+	float LastSpeed = 0.0f;
 };

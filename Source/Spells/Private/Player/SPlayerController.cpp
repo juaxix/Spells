@@ -5,6 +5,9 @@
 // Unreal includes
 #include "Blueprint/UserWidget.h"
 
+// Photon includes
+#include "PhotonCloudSubsystem.h"
+#include "Online/SPhotonCloudObject.h"
 
 void ASPlayerController::ToggleInGameMenu()
 {
@@ -35,4 +38,17 @@ void ASPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("InGameMenu", IE_Pressed, this, &ASPlayerController::ToggleInGameMenu);
+}
+
+void ASPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	// controller and pawn are ready in a world, we need to setup the replication now:
+	USPhotonCloudObject* PhotonCloudObject = Cast<USPhotonCloudObject>(GetWorld()->GetGameInstance()->GetSubsystem<UPhotonCloudSubsystem>()->GetPhotonCloudAPI());
+
+	if (PhotonCloudObject->GetState() == EPhotonCloudStates::JOINED)
+	{
+		PhotonCloudObject->CreateAllCharactersFromPhotonPlayers();
+	}
 }
