@@ -23,7 +23,7 @@ EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent
 				{
 					if (Attributes->IsAlive())
 					{
-						/*FVector MuzzleLocation = AICharacter->GetMuzzleLocation();
+						FVector MuzzleLocation = AICharacter->GetMuzzleLocation();
 						FVector Direction = TargetActor->GetActorLocation() - MuzzleLocation;
 						FRotator MuzzleRotation = Direction.Rotation();
 						MuzzleRotation.Pitch += FMath::RandRange(0.0f, MaxBulletSpread); // 0 to avoid aiming to the ground
@@ -42,10 +42,11 @@ EBTNodeResult::Type USBTTaskNode_RangeAttack::ExecuteTask(UBehaviorTreeComponent
 								}
 							}
 
-							 AICharacter->ApplyAggroLevelChange(TargetActor, ESAIAggroLevels::ATTACKING);
+							AICharacter->ApplyAggroLevelChange(TargetActor, ESAIAggroLevels::ATTACKING);
 
 							return EBTNodeResult::Succeeded;
-						}*/
+						}
+
 						return EBTNodeResult::Succeeded;
 					}
 				}
