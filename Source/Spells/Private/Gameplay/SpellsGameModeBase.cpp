@@ -110,7 +110,7 @@ void ASpellsGameModeBase::HandleStartingNewPlayer_Implementation(APlayerControll
 
 bool ASpellsGameModeBase::OnCustomRoomEnemiesPropertyChanged(const FString& EnemyPropertyName, UPhotonJSON* RoomEnemyPropertyJSON)
 {
-	// new enemies defined as properties
+	{// new enemies defined as properties
 	static const int32 EnemiesStringLen = FCString::Strlen(SpellsKeysForReplication::EnemiesPrefix);
 	if (EnemyPropertyName.Mid(0, EnemiesStringLen).Equals(SpellsKeysForReplication::EnemiesPrefix))
 	{
@@ -122,22 +122,27 @@ bool ASpellsGameModeBase::OnCustomRoomEnemiesPropertyChanged(const FString& Enem
 
 		return true;
 	}
+	} // enemy props
 
-	// enemies attributes definitions as properties
+	{// enemies attributes definitions as properties
 	static const int32 EnemiesAttributesStringLen = FCString::Strlen(SpellsKeysForReplication::EnemiesAttributesPrefix);
 	if (EnemyPropertyName.Mid(0, EnemiesAttributesStringLen).Equals(SpellsKeysForReplication::EnemiesAttributesPrefix))
 	{
 		const int32 EnemyUniqueId = FCString::Atoi(*EnemyPropertyName.Mid(EnemiesAttributesStringLen, EnemyPropertyName.Len() - EnemiesAttributesStringLen));
 		if (const ASAICharacter* AICharacter = Cast<ASAICharacter>(FindMasterControlledActor(EnemyUniqueId)))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Getting AI attrs %s"), *RoomEnemyPropertyJSON->Get_JSON_Object(EnemyPropertyName)->GetJSONasString());
+			if (PhotonCloudObject->IsDebugLogOn())
+			{
+				UE_LOG(LogTemp, Log, TEXT("Getting AI attrs %s"), *RoomEnemyPropertyJSON->Get_JSON_Object(EnemyPropertyName)->GetJSONasString());
+			}
 			AICharacter->GetAttributesComponent()->OnAttributesPropertiesChanged(RoomEnemyPropertyJSON->Get_JSON_Object(EnemyPropertyName));
 		}
 
 		return true;
 	}
+	} // enemy atts
 
-	// enemies actions definitions as properties
+	{// enemies actions definitions as properties
 	static const int32 EnemiesActionsStringLen = FCString::Strlen(SpellsKeysForReplication::EnemiesActionsPrefix);
 	if (EnemyPropertyName.Mid(0, EnemiesActionsStringLen).Equals(SpellsKeysForReplication::EnemiesActionsPrefix))
 	{
@@ -149,6 +154,21 @@ bool ASpellsGameModeBase::OnCustomRoomEnemiesPropertyChanged(const FString& Enem
 
 		return true;
 	}
+	} // enemy actions
+
+	{// enemies changed target
+	static const int32 EnemiesTargetActorStringLen = FCString::Strlen(SpellsKeysForReplication::EnemiesTargetActorPrefix);
+	if (EnemyPropertyName.Mid(0, EnemiesTargetActorStringLen).Equals(SpellsKeysForReplication::EnemiesTargetActorPrefix))
+	{
+		const int32 EnemyUniqueId = FCString::Atoi(*EnemyPropertyName.Mid(EnemiesTargetActorStringLen, EnemyPropertyName.Len() - EnemiesTargetActorStringLen));
+		if (ASAICharacter* AICharacter = Cast<ASAICharacter>(FindMasterControlledActor(EnemyUniqueId)))
+		{
+			AICharacter->OnTargetActorChanged(RoomEnemyPropertyJSON->Get_JSON_Object(EnemyPropertyName));
+		}
+
+		return true;
+	}
+	} // enemy target actor
 
 	return false;
 }
@@ -212,7 +232,6 @@ void ASpellsGameModeBase::OnCustomRoomPropertiesChanged_Implementation(UPhotonJS
 
 bool ASpellsGameModeBase::CanSpawnEnemy() const
 {
-	//return false;
 	if (!IsValid(SpawnEnemyInTimeCurve) || !PhotonCloudObject->AmIMaster())
 	{
 		return false;
@@ -299,7 +318,11 @@ void ASpellsGameModeBase::OnEnemyAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVe
 			EnemyCharacter->SetupPhoton(PhotonCloudObject, EnemyUniqueId);
 			if (PhotonCloudObject->AmIMaster())
 			{
-				UE_LOG(LogTemp, Log, TEXT("Master Spawning enemy : ID: %d, Hash: %lld"), EnemyUniqueId, EnemyCharacter->HashedName);
+				if (PhotonCloudObject->IsDebugLogOn())
+				{
+					UE_LOG(LogTemp, Log, TEXT("Master Spawning enemy : ID: %d, Hash: %lld"), EnemyUniqueId, EnemyCharacter->HashedName);
+				}
+
 				PhotonCloudObject->AddCustomRoomProperties(UPhotonJSON::Create(this)->Set_JSON_Object(
 					SpellsKeysForReplication::EnemiesPrefix + FString::FromInt(EnemyUniqueId),
 					UPhotonJSON::Create(this)
@@ -318,10 +341,14 @@ void ASpellsGameModeBase::OnEnemyAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVe
 			}
 			else
 			{
-				UE_LOG(LogTemp, Log, TEXT("Client Spawning enemy : ID: %d, Hash: %lld"), EnemyUniqueId, EnemyCharacter->HashedName);
+				if (PhotonCloudObject->IsDebugLogOn())
+				{
+					UE_LOG(LogTemp, Log, TEXT("Client Spawning enemy : ID: %d, Hash: %lld"), EnemyUniqueId, EnemyCharacter->HashedName);
+				}
 			}
 
 			EnemyCharacter->FinishSpawning(SpawnTransform);
+			EnemyCharacter->bInitialSync = true;
 		}
 		else
 		{
@@ -464,7 +491,10 @@ void ASpellsGameModeBase::OnReceivedActorData(const int64& InHashedName, UPhoton
 				if (const ASAICharacter* AICharacter = Cast<ASAICharacter>(FindMasterControlledActor(EnemyUniqueId)))
 				{
 					UPhotonJSON* PackedActionEventJSON = ActorData->Get_JSON_Object(Key);
-					UE_LOG(LogTemp, Log, TEXT("Receiving AI Action Event %s"), *PackedActionEventJSON->GetJSONasString());
+					if (PhotonCloudObject->IsDebugLogOn())
+					{
+						UE_LOG(LogTemp, Log, TEXT("Receiving AI Action Event %s"), *PackedActionEventJSON->GetJSONasString());
+					}
 					AICharacter->GetActionsComponent()->OnActionsPropertiesChanged(PackedActionEventJSON);
 				}
 			}
@@ -540,7 +570,9 @@ void ASpellsGameModeBase::OnActorKilled(AActor* Killed, AActor* Killer)
 			PhotonCloudObject->RemoveCustomRoomProperties(TArray<FString>{
 				SpellsKeysForReplication::EnemiesPrefix + AIUniqueIdStr,
 				SpellsKeysForReplication::EnemiesActionsPrefix + AIUniqueIdStr,
-				SpellsKeysForReplication::EnemiesAttributesPrefix + AIUniqueIdStr});
+				SpellsKeysForReplication::EnemiesAttributesPrefix + AIUniqueIdStr,
+				SpellsKeysForReplication::EnemiesTargetActorPrefix + AIUniqueIdStr
+			});
 		}
 
 		SpawnedEnemies.Remove(KilledAICharacter->AIUniqueId);
@@ -732,6 +764,11 @@ void ASpellsGameModeBase::OnMasterControlGameMode()
 		{
 			PickableSpotQueryInstance->GetOnQueryFinishedEvent().AddDynamic(this, &ASpellsGameModeBase::OnPickableSpawnQueryCompleted);
 		}
+	}
+
+	for (const TTuple<int32, ASAICharacter*>& EnemyPair : SpawnedEnemies)
+	{
+		EnemyPair.Value->OnMasterChanged();
 	}
 }
 

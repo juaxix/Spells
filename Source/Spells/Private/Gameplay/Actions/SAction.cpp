@@ -63,7 +63,7 @@ UPhotonJSON* USAction::GetActionStateJSON(AActor* Instigator)
 			FString::FromInt(ActionNetId), UPhotonJSON::Create(this)
 				->SetBoolean(SpellsKeysForReplication::ActionActive, bIsActive)
 				->SetInteger(SpellsKeysForReplication::InstigatorUniqueId, InstigatorUniqueId)
-				->SetShort(SpellsKeysForReplication::InstigatorType, static_cast<short>(InstigatorType)));
+				->SetByte(SpellsKeysForReplication::InstigatorType, static_cast<uint8>(InstigatorType)));
 }
 
 void USAction::ReplicateActionState(AActor* Instigator)
@@ -94,11 +94,10 @@ void USAction::OnPropertiesChanged_Implementation(const UPhotonJSON* InActionJSO
 		const bool bShouldActive = InActionJSON->GetBoolean(SpellsKeysForReplication::ActionActive);
 		if (bShouldActive != bIsActive)
 		{
-			// Get instigator from replication data
+			// Get instigator from replicated data
 			AActor* Instigator = GetOwningComponent()->PhotonCloudObject->FindInstigatorWithUniqueId(
-				static_cast<ESInstigatorTypes>(InActionJSON->GetShort(SpellsKeysForReplication::InstigatorType)),
-				InActionJSON->GetInteger(SpellsKeysForReplication::InstigatorUniqueId)
-			);
+				static_cast<ESInstigatorTypes>(InActionJSON->GetByte(SpellsKeysForReplication::InstigatorType)),
+				InActionJSON->GetInteger(SpellsKeysForReplication::InstigatorUniqueId));
 
 			if (!bIsActive)
 			{

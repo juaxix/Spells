@@ -11,7 +11,7 @@
 void USWorldUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	if (!IsValid(ParentSizeBox))
+	if (!IsValid(ParentSizeBox) || !IsValid(AttachedActor))
 	{
 		return;
 	}
@@ -19,7 +19,7 @@ void USWorldUserWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 	FVector2D ScreenPosition;
 	if (UGameplayStatics::ProjectWorldToScreen(GetOwningPlayer(), AttachedActor->GetActorLocation(), ScreenPosition))
 	{
-		float ViewportScale = UWidgetLayoutLibrary::GetViewportScale(this);
+		const float ViewportScale = UWidgetLayoutLibrary::GetViewportScale(this);
 		ScreenPosition /= ViewportScale; //adjust for this widget
 		ParentSizeBox->SetRenderTranslation(ScreenPosition);
 		ParentSizeBox->SetVisibility(ESlateVisibility::HitTestInvisible);

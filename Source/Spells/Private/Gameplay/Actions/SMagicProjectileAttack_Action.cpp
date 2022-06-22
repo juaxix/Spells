@@ -8,10 +8,13 @@
 #include "GameFramework/Character.h"
 
 // Spells includes
-#include "PhotonJSON.h"
+#include "AI/SAICharacter.h"
 #include "Online/SPhotonCloudObject.h"
 #include "Gameplay/Attacks/SMagicProjectile.h"
 #include "Player/SCharacter.h"
+
+// Photon includes
+#include "PhotonJSON.h"
 
 namespace
 {
@@ -33,6 +36,10 @@ void USMagicProjectileAttack_Action::StartAction_Implementation(AActor* Instigat
 		}
 
 		Character->PlayAnimMontage(AnimMontage);
+		if (ASAICharacter* AICharacter = Cast<ASAICharacter>(Character))
+		{
+			AICharacter->ApplyAggroLevelChange(Instigator, ESAIAggroLevels::ATTACKING);
+		}
 	}
 }
 

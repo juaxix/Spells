@@ -60,9 +60,6 @@ public:
 		}
 	}
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Spells|Photon Cloud")
-	void OnEventReplicated(const UPhotonJSON* EventJSON);
-
 	UFUNCTION(BlueprintPure, Category = "Spells|AI|Animation")
 	float GetCurrentSpeed() const;
 
@@ -72,6 +69,12 @@ public:
 
 	void SetupPhoton(USPhotonCloudObject* InPhotonCloudObject, int32 EnemyUniqueId);
 
+	void OnMasterChanged()
+	{
+		BindEvents();
+	}
+
+	void OnTargetActorChanged(const UPhotonJSON* TargetActorJSON);
 
 protected:
 	virtual void BeginPlay() override;
@@ -84,8 +87,12 @@ protected:
 
 	virtual void LagFreeMovementSync(float DeltaSeconds);
 
+	virtual void BindEvents();
+
+	virtual void OnClientSpottedTarget(APawn* InPawn);
+
 	UFUNCTION()
-	virtual void OnPawnInSight(APawn* InPawn);
+	virtual void OnMasterPawnInSight(APawn* InPawn);
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* AttackerInstigatorActor, USAttributesComponent* AttributeComponent, float NewHealth, float Delta, const FHitResult& Hit);
@@ -105,6 +112,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Spells|Photon Cloud")
 	int64 HashedName = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spells|Debug", meta = (AllowPrivateAccess = "true", ToolTip = "To know if this AI Char is spawned in other clients (already in room props)"))
+	uint8 bInitialSync:1;
 
 protected:
 	UPROPERTY(Transient)

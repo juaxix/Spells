@@ -72,7 +72,10 @@ void USActionsComponent::ReplicateActionEvent(UPhotonJSON* ActionEventJSON)
 	{
 		PhotonCloudObject->SendPlayerData(UPhotonJSON::Create(this)->Set_JSON_Object(
 				 SpellsKeysForReplication::ActionEvent, ActionEventJSON), TArray<int32>());
-		UE_LOG(LogTemp, VeryVerbose, TEXT("Sending Player Action Event %s"), *ActionEventJSON->GetJSONasString());
+		if (PhotonCloudObject->IsDebugLogOn())
+		{
+			UE_LOG(LogTemp, VeryVerbose, TEXT("Sending Player Action Event %s"), *ActionEventJSON->GetJSONasString());
+		}
 	}
 	else
 	{
@@ -85,7 +88,10 @@ void USActionsComponent::ReplicateActionEvent(UPhotonJSON* ActionEventJSON)
 						SpellsKeysForReplication::EnemiesActionsEventPrefix + 
 						FString::FromInt(OwnerUniqueNetId), ActionEventJSON), 
 				NoPlayerSpecific);
-		UE_LOG(LogTemp, Log, TEXT("Sending AI Action Event %s"), *ActionEventJSON->GetJSONasString());
+		if (PhotonCloudObject->IsDebugLogOn())
+		{
+			UE_LOG(LogTemp, Log, TEXT("Sending AI Action Event %s"), *ActionEventJSON->GetJSONasString());
+		}
 	}
 }
 

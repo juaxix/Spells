@@ -18,6 +18,7 @@
 #include "AI/SAIController.h"
 #include "Gameplay/SActionsComponent.h"
 #include "Gameplay/SAttributesComponent.h"
+#include "Player/SCharacter.h"
 #include "UI/SWorldUserWidget.h"
 
 namespace
@@ -26,7 +27,8 @@ namespace
 }
 
 ASAICharacter::ASAICharacter()
-	: bDebug(false)
+	: bInitialSync(false)
+	, bDebug(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
@@ -35,19 +37,6 @@ ASAICharacter::ASAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
-}
-
-void ASAICharacter::OnEventReplicated_Implementation(const UPhotonJSON* EventJSON)
-{
-	if (!IsValid(EventJSON))
-	{
-		return;
-	}
-	
-	//if (EventJSON->Contains(SpellsKeysForReplication::))
-	{
-		
-	}
 }
 
 float ASAICharacter::GetCurrentSpeed() const
@@ -85,6 +74,21 @@ void ASAICharacter::SetupPhoton(USPhotonCloudObject* InPhotonCloudObject, int32 
 	}
 }
 
+void ASAICharacter::OnTargetActorChanged(const UPhotonJSON* TargetActorJSON)
+{
+	if (!IsValid(TargetActorJSON) || !PhotonCloudObject || PhotonCloudObject->AmIMaster())
+	{
+		return;
+	}
+
+	if (APawn* NewTargetPawn = Cast<APawn>(PhotonCloudObject->FindInstigatorWithUniqueId(
+		static_cast<ESInstigatorTypes>(TargetActorJSON->GetByte(SpellsKeysForReplication::InstigatorType)),
+		TargetActorJSON->GetInteger(SpellsKeysForReplication::InstigatorUniqueId))))
+	{
+		OnClientSpottedTarget(NewTargetPawn);
+	}
+}
+
 void ASAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -94,9 +98,42 @@ void ASAICharacter::BeginPlay()
 	// cache muzzle
 	MuzzleSocket = GetMesh()->GetSocketByName(SAI_MUZZLE_NAME);
 
-	// bind events
-	PawnSensingComponent->OnSeePawn.AddDynamic(this, &ASAICharacter::OnPawnInSight);
-	AttributesComponent->OnHealthAttributeChanged.AddDynamic(this, &ASAICharacter::OnHealthChanged);
+	BindEvents();
+}
+
+void ASAICharacter::BindEvents()
+{
+	if (PhotonCloudObject && PhotonCloudObject->AmIMaster())
+	{
+		PawnSensingComponent->bOnlySensePlayers = false;
+		PawnSensingComponent->OnSeePawn.AddUniqueDynamic(this, &ASAICharacter::OnMasterPawnInSight);
+	}
+
+	AttributesComponent->OnHealthAttributeChanged.AddUniqueDynamic(this, &ASAICharacter::OnHealthChanged);
+}
+
+void ASAICharacter::OnClientSpottedTarget(APawn* InPawn)
+{
+	if (ASAIController* AIController = GetController<ASAIController>())
+	{
+		AIController->SetCurrentTargetActor(InPawn);
+		if (!SpottedWidget)
+		{
+			SpottedWidget = CreateWidget<USWorldUserWidget>(GetWorld(), SpottedWidgetClass);
+			if (SpottedWidget)
+			{
+				SpottedWidget->AttachedActor = this;
+				SpottedWidget->AddToViewport(10); // if ZOrder > 0 place this widget over others to avoid be behind health
+			}
+		}
+
+		ApplyAggroLevelChange(InPawn, ESAIAggroLevels::SPOTTED);
+
+		if (bDebug)
+		{
+			DrawDebugString(GetWorld(), GetActorLocation(), FString::Printf(TEXT("PLAYER SPOTTED: %s"), *InPawn->GetName()), nullptr, FColor::Cyan, 4.0f, true);
+		}
+	}
 }
 
 void ASAICharacter::BeginDestroy()
@@ -165,31 +202,23 @@ void ASAICharacter::LagFreeMovementSync(float DeltaSeconds)
 	}
 }
 
-void ASAICharacter::OnPawnInSight(APawn* InPawn)
+void ASAICharacter::OnMasterPawnInSight(APawn* InPawn)
 {
-	if (ASAIController* AIController = GetController<ASAIController>())
+	if (InPawn && HashedName != -1 && PhotonCloudObject && PhotonCloudObject->AmIMaster())
 	{
-		if (AIController->GetCurrentTargetActor() == InPawn)
+		if (!InPawn->IsA(ASCharacter::StaticClass()))
 		{
 			return;
 		}
 
-		AIController->SetCurrentTargetActor(InPawn);
-		if (!SpottedWidget)
+		if (const ASAIController* AIController = GetController<ASAIController>())
 		{
-			SpottedWidget = CreateWidget<USWorldUserWidget>(GetWorld(), SpottedWidgetClass);
-			if (SpottedWidget)
+			if (AIController->GetCurrentTargetActor() == InPawn)
 			{
-				SpottedWidget->AttachedActor = this;
-				SpottedWidget->AddToViewport(10); // if ZOrder > 0 place this widget over others to avoid be behind health
+				return;
 			}
-		}
 
-		ApplyAggroLevelChange(InPawn, ESAIAggroLevels::SPOTTED);
-
-		if (bDebug)
-		{
-			DrawDebugString(GetWorld(), GetActorLocation(), FString::Printf(TEXT("PLAYER SPOTTED: %s"), *InPawn->GetName()), nullptr, FColor::Cyan, 4.0f, true);
+			OnClientSpottedTarget(InPawn);
 		}
 	}
 }
@@ -223,7 +252,7 @@ void ASAICharacter::OnHealthChanged(AActor* AttackerInstigatorActor, USAttribute
 		}
 		else
 		{
-			if (AttackerInstigatorActor && AttackerInstigatorActor != this)
+			if (AttackerInstigatorActor && AttackerInstigatorActor != this && PhotonCloudObject && PhotonCloudObject->AmIMaster())
 			{
 				if (ASAIController* AIController = GetController<ASAIController>())
 				{

@@ -34,6 +34,7 @@ namespace SpellsKeysForReplication
 	static constexpr const TCHAR* EnemiesActionsPrefix = TEXT("eac_");
 	static constexpr const TCHAR* EnemiesActionsEventPrefix = TEXT("eace_");
 	static constexpr const TCHAR* EnemiesAttributesPrefix = TEXT("eat_");
+	static constexpr const TCHAR* EnemiesTargetActorPrefix = TEXT("eta_");
 	static constexpr const TCHAR* EnemyAssetId = TEXT("eai");
 	static constexpr const TCHAR* EnemyLocation = TEXT("el");
 	static constexpr const TCHAR* PickablesPrefix = TEXT("pi_");
@@ -121,6 +122,8 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "Spells|Photon Cloud")
 	AActor* FindInstigatorWithUniqueId(ESInstigatorTypes InstigatorType, int32 UniqueId);
+
+	bool IsDebugLogOn();
 
 protected:
 	void OnSpawnCharacter(int32 PlayerNumber, const FString& PlayerName, bool bIsLocal);

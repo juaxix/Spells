@@ -9,8 +9,9 @@
 #include "TimerManager.h"
 
 // Photon includes
-#include "PhotonJSON.h"
 #include "PhotonCloudAPIBPLibrary.h"
+#include "PhotonCloudConfig.h"
+#include "PhotonJSON.h"
 
 // Spells includes
 #include "AI/SAICharacter.h"
@@ -161,6 +162,11 @@ AActor* USPhotonCloudObject::FindInstigatorWithUniqueId(ESInstigatorTypes Instig
 	}
 
 	return nullptr;
+}
+
+bool USPhotonCloudObject::IsDebugLogOn() 
+{
+	return GetPhotonCloudConfig()->debugLogLevel > EPhotonDebugLevel::WARNINGS;
 }
 
 void USPhotonCloudObject::OnSpawnCharacter(int32 PlayerNumber, const FString& PlayerName, bool bIsLocal)

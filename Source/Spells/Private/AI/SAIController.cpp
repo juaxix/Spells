@@ -11,10 +11,12 @@
 
 // Photon includes
 #include "PhotonCloudSubsystem.h"
+#include "PhotonJSON.h"
 
 // Spells includes
-
+#include "AI/SAICharacter.h"
 #include "Online/SPhotonCloudObject.h"
+#include "Player/SCharacter.h"
 
 void ASAIController::BeginPlay()
 {
@@ -77,10 +79,32 @@ bool ASAIController::SetCurrentTargetActor(AActor* InActor)
 				return true;
 			}
 
+			if (PhotonCloudObject && PhotonCloudObject->AmIMaster() && IsValid(GetCharacter()))
+			{
+				const ASAICharacter* AICharacter = Cast<ASAICharacter>(GetCharacter());
+				if (!AICharacter || !AICharacter->bInitialSync)
+				{
+					return false;
+				}
+					
+				ESInstigatorTypes InstigatorType;
+				int32 InstigatorUniqueId;
+				PhotonCloudObject->GetInstigatorUniqueId(InActor, InstigatorType, InstigatorUniqueId);
+				UPhotonJSON* NewTargetActorJSON = UPhotonJSON::Create(this)
+					->Set_JSON_Object(
+						SpellsKeysForReplication::EnemiesTargetActorPrefix + 
+						FString::FromInt(AICharacter->AIUniqueId), 
+						UPhotonJSON::Create(this)
+							->SetInteger(SpellsKeysForReplication::InstigatorUniqueId, InstigatorUniqueId)
+							->SetByte(SpellsKeysForReplication::InstigatorType, static_cast<uint8>(InstigatorType)));
+
+				PhotonCloudObject->AddCustomRoomProperties(NewTargetActorJSON);
+			}
+
 			return BlackboardComponent->SetValue<UBlackboardKeyType_Object>(MoveToActorBBKeyID, InActor);
 		}
 	}
-
+	
 	return false;
 }
 

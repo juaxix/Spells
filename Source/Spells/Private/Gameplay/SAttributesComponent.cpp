@@ -249,14 +249,15 @@ void USAttributesComponent::ReplicateAttributes()
 					const UPhotonJSON* AttributesJSON = GetAttributesForReplication();
 					if (AttributesJSON->GetCount() > 0)
 					{
-						UPhotonJSON* P = UPhotonJSON::Create(this)
+						UPhotonJSON* EnemyProperties = UPhotonJSON::Create(this)
 							->Set_JSON_Object(
 								SpellsKeysForReplication::EnemiesAttributesPrefix + FString::FromInt(OwnerUniqueNetId),
 								AttributesJSON);
-						PhotonCloudObject->AddCustomRoomProperties(
-							P
-						);
-						UE_LOG(LogTemp, Log, TEXT("Sending AI attrs %s"), *P->GetJSONasString());
+						PhotonCloudObject->AddCustomRoomProperties(EnemyProperties);
+						if (PhotonCloudObject->IsDebugLogOn())
+						{
+							UE_LOG(LogTemp, Log, TEXT("Sending AI attrs %s"), *EnemyProperties->GetJSONasString());
+						}
 					}
 				}
 				else
