@@ -57,7 +57,7 @@ class SPELLS_API USPhotonJoinOrCreateRoomAsyncCall : public UBlueprintAsyncActio
 public:
 	/** Creates a room async task */
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", Category = "Spells|Photon Cloud"))
-	static USPhotonJoinOrCreateRoomAsyncCall* PhotonCreateRoom(UObject* WorldContextObject, const FString& InRoomName, const int32 InMaxPlayers, UPhotonJSON* InInitialProperties)
+	static USPhotonJoinOrCreateRoomAsyncCall* PhotonCreateRoom(UObject* WorldContextObject, const FString& InRoomName, const uint8 InMaxPlayers, UPhotonJSON* InInitialProperties)
 	{
 		USPhotonJoinOrCreateRoomAsyncCall* CreateRoomAsyncCall = NewObject<USPhotonJoinOrCreateRoomAsyncCall>(WorldContextObject);
 		CreateRoomAsyncCall->RoomName = InRoomName;
@@ -69,7 +69,7 @@ public:
 
 	/** Creates or joins a room async task */
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", Category = "Spells|Photon Cloud"))
-	static USPhotonJoinOrCreateRoomAsyncCall* PhotonJoinOrCreateRoom(UObject* WorldContextObject, const FString& InRoomName, const int32 InMaxPlayers, UPhotonJSON* InInitialProperties)
+	static USPhotonJoinOrCreateRoomAsyncCall* PhotonJoinOrCreateRoom(UObject* WorldContextObject, const FString& InRoomName, const uint8 InMaxPlayers, UPhotonJSON* InInitialProperties)
 	{
 		USPhotonJoinOrCreateRoomAsyncCall* JoinOrCreateRoomAsyncCall = NewObject<USPhotonJoinOrCreateRoomAsyncCall>(WorldContextObject);
 		JoinOrCreateRoomAsyncCall->RoomName = InRoomName;
@@ -108,7 +108,7 @@ private:
 	UPhotonJSON* InitialProperties = nullptr;
 
 	FString RoomName = TEXT("");
-	int32 MaxPlayers = 2;
+	uint8 MaxPlayers = 2;
 	bool bOnlyCreate = true;
 };
 
@@ -120,7 +120,7 @@ class SPELLS_API USPhotonJoinRandomRoomAsyncCall : public UBlueprintAsyncActionB
 public:
 	/** Creates a room async task */
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject", Category = "Spells|Photon Cloud"))
-	static USPhotonJoinRandomRoomAsyncCall* PhotonJoinRandomRoom(UObject* WorldContextObject, const FString& InLobbyName, ELobbyType InSelectedLobbyType, EMatchMakingMode InSelectedMatchMakingModeconst, int32 InMaxPlayers, UPhotonJSON* InInitialProperties, const FString& InLobbySQL = "")
+	static USPhotonJoinRandomRoomAsyncCall* PhotonJoinRandomRoom(UObject* WorldContextObject, const FString& InLobbyName, ELobbyType InSelectedLobbyType, EMatchMakingMode InSelectedMatchMakingModeconst, uint8 InMaxPlayers, UPhotonJSON* InInitialProperties, const FString& InLobbySQL = "")
 	{
 		USPhotonJoinRandomRoomAsyncCall* JoinRandomRoomAsyncCall = NewObject<USPhotonJoinRandomRoomAsyncCall>(WorldContextObject);
 		JoinRandomRoomAsyncCall->LobbyName = InLobbyName;
@@ -163,5 +163,5 @@ private:
 	ELobbyType LobbyType = ELobbyType::DEFAULT;
 	FString LobbySQL = TEXT("");
 	EMatchMakingMode MatchMakingMode = EMatchMakingMode::FILL;
-	int32 MaxPlayers = 2;
+	uint8 MaxPlayers = 2;
 };
