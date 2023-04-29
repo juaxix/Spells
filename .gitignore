@@ -75,3 +75,4 @@ DerivedDataCache/*
 _ReSharper.Caches/
 *.user
 Plugins/
+.vsconfig
