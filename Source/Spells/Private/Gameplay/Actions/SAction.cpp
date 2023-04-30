@@ -79,7 +79,7 @@ UPhotonJSON* USAction::ToPhotonJSON_Implementation() const
 	// we only need the class name to build the action in the replicated side
 	return UPhotonJSON::Create()->SetString(
 		SpellsKeysForReplication::ActionClassName, 
-		FStringClassReference(GetClass()).ToString());
+		FSoftClassPath(GetClass()).ToString());
 }
 
 void USAction::OnPropertiesChanged_Implementation(const UPhotonJSON* InActionJSON)

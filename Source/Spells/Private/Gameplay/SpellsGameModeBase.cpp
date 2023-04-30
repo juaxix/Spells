@@ -428,7 +428,7 @@ void ASpellsGameModeBase::OnPickableSpawnQueryCompleted(UEnvQueryInstanceBluepri
 ASPickableBase* ASpellsGameModeBase::MasterSpawnPickable(TSubclassOf<ASPickableBase> SpawnPickableClass, const FVector& SpawnLocation)
 {
 	ASPickableBase* Pickable = GetWorld()->SpawnActor<ASPickableBase>(SpawnPickableClass, SpawnLocation, FRotator::ZeroRotator);
-	const FString ClassName = FStringClassReference(SpawnPickableClass).ToString();
+	const FString ClassName = FSoftClassPath(SpawnPickableClass).ToString();
 	if (IsValid(Pickable))
 	{
 		Pickable->PickableUniqueId = ++CurrentPickableNetIdCount;

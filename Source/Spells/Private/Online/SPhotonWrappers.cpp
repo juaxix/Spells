@@ -1,4 +1,4 @@
-// Spells - xixgames - juaxix - 2021/2022
+// Spells - xixgames - juaxix - 2021/2023
 
 #include "Online/SPhotonWrappers.h"
 
@@ -28,6 +28,7 @@ void USPhotonConnectAsyncCall::SetReadyToDestroy()
 {
 	OnCompleted.RemoveAll(this);
 	UPhotonCloudObject* PhotonCloudObject = GetOuter()->GetWorld()->GetGameInstance()->GetSubsystem<UPhotonCloudSubsystem>()->GetPhotonCloudAPI();
+	PhotonCloudObject->FetchServerTimeStamp();
 	PhotonCloudObject->OnPhotonCloudConnected.RemoveAll(this);
 	PhotonCloudObject->OnPhotonConnectionError.RemoveAll(this);
 
