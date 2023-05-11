@@ -76,3 +76,4 @@ _ReSharper.Caches/
 *.user
 Plugins/
 .vsconfig
+.idea/
