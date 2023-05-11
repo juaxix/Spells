@@ -3,16 +3,14 @@
 #include "Player/SCharacter.h"
 
 // Unreal includes
-#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
+
 #if !UE_BUILD_SHIPPING
 #include "DrawDebugHelpers.h"
 #endif
-#include "Engine/SkeletalMeshSocket.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 
 // Photon includes
 #include "PhotonCloudSubsystem.h"
@@ -283,8 +281,8 @@ void ASCharacter::Replicate_Movement(bool bForce)
 
 	if (bForce ||
 		!Location.Equals(LastLocation, 1.0f) ||
-		!Rotation.Equals(LastRotation, 0.1f) ||
-		!ControlRot.Equals(LastControlRot, 0.2f))
+		!Rotation.Equals(LastRotation, 1.0f) ||
+		!ControlRot.Equals(LastControlRot, 1.0f))
 	{
 		static TArray<int32> NoTarget;
 		LastLocation = Location;
@@ -315,8 +313,10 @@ void ASCharacter::LagFreeRemotePlayerSync(float DeltaSeconds)
 			{
 				AnimInstance->CalculatedSpeed = FVector::Dist(Location, LastLocation) / PhotonCloudObject->Player_SyncFreq;
 			}
-			SetActorLocation(UKismetMathLibrary::VLerp(Location, LastLocation, DeltaTime));
-			SetActorRotation(UKismetMathLibrary::RLerp(GetActorRotation(), LastRotation, DeltaTime, true));
+			
+			const float LerpFactor = FMath::Clamp(DeltaTime, 0.0f, 1.0f);
+			SetActorLocation(FMath::Lerp(Location, LastLocation, LerpFactor));
+			SetActorRotation(FMath::Lerp(GetActorRotation(), LastRotation, LerpFactor));
 		}
 		else
 		{
