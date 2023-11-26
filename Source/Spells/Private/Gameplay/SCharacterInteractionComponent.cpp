@@ -76,8 +76,8 @@ void USCharacterInteractionComponent::FindBestInteractable()
 				{
 					FHitResult WallHitResult;
 					if (HitActor->Implements<USInteractableInterface>() && (!bCheckForWalls || 
-						 World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitActor->GetActorLocation(), CollisionObjectQueryParams_Static) &&
-						 (WallHitResult.GetActor() == HitActor || WallHitResult.GetActor() == nullptr)))
+						 (World->LineTraceSingleByObjectType(WallHitResult, StartLocation, HitActor->GetActorLocation(), CollisionObjectQueryParams_Static) &&
+						 (WallHitResult.GetActor() == HitActor || WallHitResult.GetActor() == nullptr))))
 					{
 						EndLocation = bCheckForWalls && WallHitResult.bBlockingHit ? WallHitResult.ImpactPoint : HitResult.ImpactPoint;
 						NewTargetActor = HitActor;

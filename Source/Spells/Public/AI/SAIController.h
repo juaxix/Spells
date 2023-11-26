@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "BehaviorTree/Blackboard/BlackboardKey.h"
+
 #include "SAIController.generated.h"
 
 namespace SpellsAIController
@@ -46,6 +48,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|AI")
 	UBehaviorTree* DefaultBehaviorTree = nullptr;
 
-	uint8 MoveToLocationBBKeyID = 0;
-	uint8 MoveToActorBBKeyID = 0;
+	FBlackboard::FKey MoveToLocationBBKeyID = 0;
+	FBlackboard::FKey MoveToActorBBKeyID = 0;
 };

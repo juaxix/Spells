@@ -7,7 +7,7 @@ public class Spells : ModuleRules
 	public Spells(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "GameplayTasks", "GameplayTags", "UMG" });
 
 		PublicIncludePaths.Add(ModuleDirectory + "/Public");

@@ -118,7 +118,6 @@ bool USActionsComponent::StartActionByName(AActor* Instigator, const FName& Acti
 		{
 			if (Action->CanStart(Instigator))
 			{
-				// Is Client?
 				if (!GetOwner()->HasAuthority())
 				{
 					Server_StartActionByName(Instigator, ActionName);
