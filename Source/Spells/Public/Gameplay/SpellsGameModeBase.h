@@ -160,7 +160,7 @@ protected:
 	int32 CreditsGrantedPerKill = 20;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Category = "Spells|SaveGame", meta = (AllowPrivateAccess = "true"))
-	USSaveGame* CurrentSaveGame;
+	USSaveGame* CurrentSaveGame = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spells|SaveGame", meta = (AllowPrivateAccess = "true"))
 	FString SaveGameSlotName = TEXT("Spells");

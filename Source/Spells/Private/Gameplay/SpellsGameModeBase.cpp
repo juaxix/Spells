@@ -5,7 +5,6 @@
 // Unreal includes
 #include "Dom/JsonObject.h"
 #include "Engine/AssetManager.h"
-#include "Engine/AssetManagerSettings.h"
 #include "EngineUtils.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
@@ -278,7 +277,7 @@ void ASpellsGameModeBase::OnSpawnEnemyEQ_Completed(UEnvQueryInstanceBlueprintWra
 				EnemiesDataTable->GetAllRows("", EnemyInfoRows);
 				const int32 RandomIndex = FMath::RandRange(0, EnemyInfoRows.Num() - 1);
 				const FSEnemyInfoRow* RandomEnemyInfoRow = EnemyInfoRows.IsValidIndex(RandomIndex) ? EnemyInfoRows[RandomIndex] : nullptr;
-				if (UAssetManager* AssetManager = UAssetManager::GetIfValid())
+				if (UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
 				{
 					const FStreamableDelegate AssetsLoadedCallback = FStreamableDelegate::CreateUObject(this, &ASpellsGameModeBase::OnEnemyAssetsLoaded,
 						RandomEnemyInfoRow->EnemyAssetId, Locations[0], ++CurrentEnemyNetIdCount);
@@ -296,7 +295,7 @@ void ASpellsGameModeBase::OnSpawnEnemyEQ_Completed(UEnvQueryInstanceBlueprintWra
 void ASpellsGameModeBase::OnEnemyAssetsLoaded(FPrimaryAssetId LoadedAssetId, FVector SpawnLocation, int32 EnemyUniqueId)
 {
 	USEnemyDataAsset* EnemyData = nullptr;
-	if (const UAssetManager* AssetManager = UAssetManager::GetIfValid())
+	if (const UAssetManager* AssetManager = UAssetManager::GetIfInitialized())
 	{
 		EnemyData = Cast<USEnemyDataAsset>(AssetManager->GetPrimaryAssetObject(LoadedAssetId));
 	}
@@ -511,7 +510,7 @@ void ASpellsGameModeBase::ClientSpawnEnemy(int32 EnemyUniqueId, const UPhotonJSO
 		EnemyJSON->GetVector(SpellsKeysForReplication::EnemyLocation), 
 		EnemyUniqueId);
 
-	UAssetManager::GetIfValid()->LoadPrimaryAsset(EnemyPrimaryAssetId, TArray<FName>(), AssetsLoadedCallback);
+	UAssetManager::GetIfInitialized()->LoadPrimaryAsset(EnemyPrimaryAssetId, TArray<FName>(), AssetsLoadedCallback);
 }
 
 void ASpellsGameModeBase::OnNewMaster_Implementation(int32 OldMasterPlayerNumber, int32 NewMasterPlayerNumber)

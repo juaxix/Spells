@@ -7,7 +7,6 @@
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Object.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "Kismet/GameplayStatics.h"
 
 // Photon includes
 #include "PhotonCloudSubsystem.h"

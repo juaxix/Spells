@@ -1,4 +1,4 @@
-// Spells - xixgames - juaxix - 2021/2022
+// Spells - xixgames - juaxix - 2021/2024
 
 using UnrealBuildTool;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ public class SpellsTarget : TargetRules
 	public SpellsTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
+		DefaultBuildSettings = BuildSettingsVersion.Latest;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 		ExtraModuleNames.AddRange( new string[] { "Spells" } );
 	}

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "BehaviorTree/Blackboard/BlackboardKey.h"
 #include "SAIController.generated.h"
 
 class USPhotonCloudObject;
@@ -59,6 +60,6 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Spells|Photon Cloud")
 	USPhotonCloudObject* PhotonCloudObject = nullptr;
 
-	uint8 MoveToLocationBBKeyID = 0;
-	uint8 MoveToActorBBKeyID = 0;
+	FBlackboard::FKey MoveToLocationBBKeyID;
+	FBlackboard::FKey MoveToActorBBKeyID;
 };
